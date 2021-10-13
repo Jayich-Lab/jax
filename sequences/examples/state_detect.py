@@ -3,9 +3,9 @@ from jax.sequences.sequence import Sequence
 
 
 class StateDetect(Sequence):
-    """An example state detect sequence.
+    """An example state detection sequence.
 
-    Turns on the cool and repump DDSes, and counts the PMT pulses.
+    Turns on the cool and repump DDSes, and counts the PMT output.
     """
     kernel_invariants = {
         "_cool_dds", "_repump_dds", "_cool_drift_tracker", "_repump_drift_tracker"

@@ -7,7 +7,7 @@ from jax.utilities.parameter_group import ParameterGroup
 from jax.utilities.drift_tracker import DriftTracker
 
 
-class PulseSequenceAndDataSaving(_jax_exp.JaxExperiment, SinaraEnvironment):
+class PulseSequence(_jax_exp.JaxExperiment, SinaraEnvironment):
     """Example experiment that contains a pulse sequence and demonstrates data saving.
 
     This is an experiment that runs a Doppler cooling - state detection sequence repeatedly.
@@ -42,7 +42,7 @@ class PulseSequenceAndDataSaving(_jax_exp.JaxExperiment, SinaraEnvironment):
     def prepare(self):
         super().prepare()
         if self.USE_PARAMETER_BANK:
-            self.get_parameters()
+            self.save_parameters()
         else:
             self.get_mock_parameters()
         if not self.USE_DRIFT_TRACKER:
@@ -54,7 +54,7 @@ class PulseSequenceAndDataSaving(_jax_exp.JaxExperiment, SinaraEnvironment):
         try:
             self.turn_off_all_ddses()
             self.repeats_done = 0  # tracks how many repeatitions have been done.
-            self.open_datafile()  # opens up a file for writing data.
+            self.open_file()  # opens up a file for writing data.
             # defines a instance variable that will be used in the kernel.
             # instance variables cannot be defined in the kernel, but can be modified
             # the variable's type is not changed.
@@ -70,7 +70,7 @@ class PulseSequenceAndDataSaving(_jax_exp.JaxExperiment, SinaraEnvironment):
             raise e
         finally:
             self.reset_sinara_hardware()  # resets the hardware to pre-experiment state.
-            self.close_datafile()  # closes the data file.
+            self.close_file()  # closes the data file.
             self.disconnect_labrad()  # closes the labrad connection.
 
     def get_mock_parameters(self):

@@ -18,7 +18,7 @@ class JaxEnvironment(HasEnvironment):
         dv: labrad vault server.
         parameter_paths: list of (collection, parameter), paths of parameters.
             Populated when calling self.get_parameter_paths().
-        p: ParameterGroup, experiment parameters. Populated when calling self.get_parameters().
+        p: ParameterGroup, experiment parameters. Populated when calling self.save_parameters().
         drift_trackers: a dict of {name: DriftTracker}, drift trackers used by the experiment.
     """
 
@@ -27,7 +27,7 @@ class JaxEnvironment(HasEnvironment):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.drift_trackers = {}
-        self._dataset_open = False
+        self._is_dataset_open = False
 
     def _connect_labrad(self):
         self.cxn = labrad.connect()
@@ -104,9 +104,9 @@ class JaxEnvironment(HasEnvironment):
         return True
 
     @rpc
-    def open_datafile(self):
+    def open_file(self):
         """Opens a data file to write to."""
-        if self._dataset_open:
+        if self._is_dataset_open:
             return
         rid, pipeline_name, priority, expid = self._get_experiment_info()
         self.dv.open(expid["class_name"], True, rid)
@@ -114,15 +114,15 @@ class JaxEnvironment(HasEnvironment):
         self.dv.add_attribute("expid", pyon.encode(expid), "scheduler")
         self.dv.add_attribute("pipeline_name", pipeline_name, "scheduler")
         self.dv.add_attribute("priority", priority, "scheduler")
-        self._dataset_open = True
+        self._is_dataset_open = True
 
     @rpc
-    def close_datafile(self):
+    def close_file(self):
         """Saves and closes a data file to write to."""
-        if not self._dataset_open:
+        if not self._is_dataset_open:
             return
         self.dv.close()
-        self._dataset_open = False
+        self._is_dataset_open = False
 
     @rpc
     def add_attribute(self, name, value, group_path="/") -> TStr:
@@ -136,8 +136,8 @@ class JaxEnvironment(HasEnvironment):
         Returns:
             str, key of the dataset. Use this key to call set_dataset() or append_dataset().
         """
-        if not self._dataset_open:
-            self.open_datafile()
+        if not self._is_dataset_open:
+            self.open_file()
         return self.dv.add_attribute(name, value, group_path)
 
     @rpc
@@ -145,7 +145,7 @@ class JaxEnvironment(HasEnvironment):
         """Adds a dataset.
 
         Args:
-            name: str, name of the dataset.
+            name: str, dataset name.
             value: value of the dataset.
             group_path: str, path to the group to save the dataset at. Default "/datasets".
             shared: bool, make the dataset accessible to other labrad connections. Default False.
@@ -153,8 +153,8 @@ class JaxEnvironment(HasEnvironment):
         Returns:
             str, key of the dataset. Use this key to call set_dataset() or append_dataset().
         """
-        if not self._dataset_open:
-            self.open_datafile()
+        if not self._is_dataset_open:
+            self.open_file()
         return self.dv.add_dataset(name, value, group_path, shared)
 
     @rpc
@@ -163,7 +163,7 @@ class JaxEnvironment(HasEnvironment):
         """Adds a streaming dataset that is automatically saved into the file.
 
         Args:
-            name: str, name of the dataset.
+            name: str, dataset name.
             value: value of the dataset.
             maxshape: tuple, maximum shape of the data. Use None for axis that is unlimited.
             rows_stream: int, rows of data in the cache when saving to the file. Default 1.
@@ -173,8 +173,8 @@ class JaxEnvironment(HasEnvironment):
         Returns:
             str, key of the dataset. Use this key to call set_dataset() or append_dataset().
         """
-        if not self._dataset_open:
-            self.open_datafile()
+        if not self._is_dataset_open:
+            self.open_file()
         return self.dv.add_streaming_dataset(name, value, maxshape, rows_stream,
                                              group_path, shared)
 
@@ -205,8 +205,8 @@ class JaxEnvironment(HasEnvironment):
         """Sets the value of a shared dataset.
 
         Args:
-            name: str, name of the shared dataset. This is the name used in add_dataset()
-                or add_streaming_dataset() as the argument, but not the path to the dataset.
+            name: str, shared dataset name. This is the name used in add_dataset()
+                or add_streaming_dataset() as the argument, but not the dataset path.
             value: value of the shared dataset.
         """
         with self._dv_lock:
@@ -217,8 +217,8 @@ class JaxEnvironment(HasEnvironment):
         """Appends to the value of a shared dataset.
 
         Args:
-            name: str, name of the shared dataset. This is the name used in add_dataset()
-                or add_streaming_dataset() as the argument, but not the path to the dataset.
+            name: str, shared dataset name. This is the name used in add_dataset()
+                or add_streaming_dataset() as the argument, but not the dataset path.
             value: value to append to the shared dataset.
         """
         with self._dv_lock:
@@ -229,8 +229,8 @@ class JaxEnvironment(HasEnvironment):
         """Deletes the shared dataset.
 
         Args:
-            name: str, name of the shared dataset. This is the name used in add_dataset()
-                or add_streaming_dataset() as the argument, but not the path to the dataset.
+            name: str, shared dataset name. This is the name used in add_dataset()
+                or add_streaming_dataset() as the argument, but not the dataset path.
         """
         with self._dv_lock:
             self.dv.delete_shared_dataset(name)
@@ -243,14 +243,14 @@ class JaxEnvironment(HasEnvironment):
         All shared dataset it gets are saved in "/shared" group in the data file to archive.
 
         Args:
-            name: str, name of the shared dataset. This is the name used in add_dataset()
-                or add_streaming_dataset() as the argument, but not the path to the dataset.
+            name: str, shared dataset name. This is the name used in add_dataset()
+                or add_streaming_dataset() as the argument, but not the dataset path.
 
         Returns:
             dataset value.
         """
-        if not self._dataset_open:
-            self.open_datafile()
+        if not self._is_dataset_open:
+            self.open_file()
         with self._dv_lock:
             value = self.dv.get_shared_dataset(name)
             self.add_dataset(name, value, "/shared", False)
@@ -270,7 +270,7 @@ class JaxEnvironment(HasEnvironment):
         self.parameter_paths = list(set(self.parameter_paths))
 
     @host_only
-    def get_parameters(self):
+    def save_parameters(self):
         """Loads all parameters into self.p.
 
         Also saves all parameters to the data file.
@@ -293,8 +293,8 @@ class JaxEnvironment(HasEnvironment):
 
     @host_only
     def get_drift_tracker(self, name):
-        if not self._dataset_open:
-            self.open_datafile()
+        if not self._is_dataset_open:
+            self.open_file()
         if not hasattr(self, "drift_trackers"):
             self.drift_trackers = {}
         if name not in self.drift_trackers:

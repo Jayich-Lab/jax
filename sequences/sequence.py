@@ -4,7 +4,8 @@ from artiq.experiment import *
 class Sequence:
     """Base class for pulse sequences.
 
-    Pulse sequences are building blocks of kernel code. A sequence can contain other subsequences.
+    Pulse sequences are building blocks of kernel code.
+    A sequence can contain other Sequence instances as subsequences.
 
     Set required_parameters to a list of parameters used in the sequence.
     Set required_subsequences to a list of sequences used in the sequence.

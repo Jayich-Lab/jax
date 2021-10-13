@@ -6,7 +6,7 @@ from jax.utilities.devices import Devices
 
 
 class SinaraEnvironment(JaxEnvironment):
-    """Environment for Jayich lab experiments that uses sinara hardware.
+    """Environment for Jayich lab experiments that use sinara hardware.
 
     See JaxEnvironment for additional attributes that is not specific to sinara hardware.
 
