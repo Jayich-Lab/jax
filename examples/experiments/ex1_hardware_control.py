@@ -1,14 +1,16 @@
-# It is important to import this base experiment module instead of the JaxExperiment class.
-# The JaxExperiment class is derived from artiq.experiment.Experiment, and artiq will try to
-# load any derived classes from artiq.experiment.Experiment into the experiment explorer.
-# Since JaxExperiment and Experiment classes don't have the __init__ method, they cannot be
-# successfully loaded into the experiment explorer, and will raise an error.
-import jax.experiments.jax_experiment as _jax_exp
 from artiq.experiment import *
-from jax.experiments.sinara_environment import SinaraEnvironment
+from jax import JaxExperiment, SinaraEnvironment
 
 
-class HardwareControl(_jax_exp.JaxExperiment, SinaraEnvironment):
+# __all__ in an experiment module should typically only include the experiment class.
+# Specially, it cannot include the base experiment class.
+# ARTIQ discovers experiments by trying to load all objects that are subclasses of
+# artiq.experiment.Experiment. If __all__ includes the base experiment classs,
+# ARTIQ will try to load the base experiment class which results in an error.
+__all__ = ["HardwareControl"]
+
+
+class HardwareControl(JaxExperiment, SinaraEnvironment):
     """Example experiment controlling a DDS and a TTL.
 
     An experiment must first inherit from an base experiment and then inherit an environment.

@@ -1,7 +1,10 @@
 from artiq.experiment import *
-from jax.sequences.sequence import Sequence
-from jax.sequences.examples.doppler_cool import DopplerCool
-from jax.sequences.examples.state_detect import StateDetect
+from jax import Sequence
+from jax.examples.sequences.doppler_cool import DopplerCool
+from jax.examples.sequences.state_detect import StateDetect
+
+
+__all__ = ["Example2"]
 
 
 class Example2(Sequence):

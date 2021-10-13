@@ -1,8 +1,8 @@
 import numpy as _np
 from sipyco import pyon
 from artiq.experiment import *
-from jax.experiments.jax_environment import JaxEnvironment
-from jax.utilities.devices import Devices
+from jax import JaxEnvironment
+from jax.util.devices import Devices
 
 
 class SinaraEnvironment(JaxEnvironment):

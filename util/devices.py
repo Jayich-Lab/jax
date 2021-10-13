@@ -1,3 +1,6 @@
+__all__ = ["Devices"]
+
+
 class Devices:
     """Sinara device manager.
 
@@ -29,7 +32,7 @@ class Devices:
         ad9910s_used: a list of tuple (name, object) AD9910s used in the experiment.
         ttl_ins_used: a list of tuple (name, object) TTL inputs used in the experiment.
         ttl_outs_used: a list of tuple (name, object) TTL outputs used in the experiment.
-        ttl_in_outs_used: a list of tuple (name, object) of TTL inputs/outputs used in the experiment.
+        ttl_in_outs_used: a list of tuple (name, object) of TTL in/outs used in the experiment.
 
     Args:
         device_db: device_db dict from device_db.py.

@@ -1,5 +1,8 @@
 from artiq.experiment import *
-from jax.utilities.tree_dict import TreeDict
+from jax.util.tree_dict import TreeDict
+
+
+__all__ = ["DriftTracker"]
 
 
 class DriftTracker(TreeDict):

@@ -1,6 +1,9 @@
 from labrad.units import WithUnit, WithDimensionlessUnit
 
 
+__all__ = ["remove_labrad_units"]
+
+
 def remove_labrad_units(value):
     """Removes labrad unit from returned value of a labrad server.
 

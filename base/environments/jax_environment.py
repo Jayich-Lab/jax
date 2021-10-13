@@ -2,9 +2,12 @@ import threading
 import labrad
 from sipyco import pyon
 from artiq.experiment import *
-from jax.utilities.parameter_group import ParameterGroup
-from jax.utilities.drift_tracker import DriftTracker
-from jax.utilities.labrad import remove_labrad_units
+from jax.util.parameter_group import ParameterGroup
+from jax.util.drift_tracker import DriftTracker
+from jax.util.labrad import remove_labrad_units
+
+
+__all__ = ["JaxEnvironment"]
 
 
 class JaxEnvironment(HasEnvironment):

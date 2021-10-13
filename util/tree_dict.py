@@ -1,3 +1,6 @@
+__all__ = ["TreeDict"]
+
+
 class TreeDict:
     """Converts a nested dict to an object.
 

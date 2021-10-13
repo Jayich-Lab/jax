@@ -1,13 +1,15 @@
-import jax.experiments.jax_experiment as _jax_exp
 from sipyco import pyon
 from artiq.experiment import *
-from jax.experiments.sinara_environment import SinaraEnvironment
-from jax.sequences.examples.example2 import Example2
-from jax.utilities.parameter_group import ParameterGroup
-from jax.utilities.drift_tracker import DriftTracker
+from jax import JaxExperiment, SinaraEnvironment
+from jax.examples.sequences.example2 import Example2
+from jax.util.parameter_group import ParameterGroup
+from jax.util.drift_tracker import DriftTracker
 
 
-class PulseSequence(_jax_exp.JaxExperiment, SinaraEnvironment):
+__all__ = ["PulseSequence"]
+
+
+class PulseSequence(JaxExperiment, SinaraEnvironment):
     """Example experiment that contains a pulse sequence and demonstrates data saving.
 
     This is an experiment that runs a Doppler cooling - state detection sequence repeatedly.

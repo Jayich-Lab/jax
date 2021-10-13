@@ -1,7 +1,9 @@
 from sipyco import pyon
 from artiq.experiment import *
-from jax.experiments.jax_experiment import JaxExperiment
-from jax.experiments.sinara_environment import SinaraEnvironment
+from jax import JaxExperiment, SinaraEnvironment
+
+
+__all__ = ["InitializeSinara"]
 
 
 class InitializeSinara(JaxExperiment, SinaraEnvironment):

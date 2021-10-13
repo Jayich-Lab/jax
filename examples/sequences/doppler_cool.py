@@ -1,5 +1,8 @@
 from artiq.experiment import *
-from jax.sequences.sequence import Sequence
+from jax import Sequence
+
+
+__all__ = ["DopplerCool"]
 
 
 class DopplerCool(Sequence):

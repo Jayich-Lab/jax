@@ -1,4 +1,7 @@
-from jax.utilities.tree_dict import TreeDict
+from jax.util.tree_dict import TreeDict
+
+
+__all__ = ["ParameterGroup"]
 
 
 class ParameterGroup(TreeDict):
