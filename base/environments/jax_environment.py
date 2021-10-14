@@ -1,10 +1,8 @@
 import threading
-import labrad
 from sipyco import pyon
 from artiq.experiment import *
 from jax.util.parameter_group import ParameterGroup
 from jax.util.drift_tracker import DriftTracker
-from jax.util.labrad import remove_labrad_units
 
 
 __all__ = ["JaxEnvironment"]
@@ -33,6 +31,7 @@ class JaxEnvironment(HasEnvironment):
         self._is_dataset_open = False
 
     def _connect_labrad(self):
+        import labrad
         self.cxn = labrad.connect()
         try:
             self.dv = self.cxn.vault
@@ -278,6 +277,8 @@ class JaxEnvironment(HasEnvironment):
 
         Also saves all parameters to the data file.
         """
+        from jax.util.labrad import remove_labrad_units
+
         params = {}
         params_full = {}
         pb = self.cxn.parameter_database
