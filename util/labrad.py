@@ -1,3 +1,4 @@
+import numpy as _np
 from labrad.units import WithUnit, WithDimensionlessUnit
 
 
@@ -16,6 +17,8 @@ def remove_labrad_units(value):
     def labrad_type_to_array(value):
         if isinstance(value, (WithDimensionlessUnit, WithUnit)):
             value = _np.array(value.inBaseUnits())
+            if _np.ndim(value) == 0:
+                value = value.item()  # sipyco.pyon interprets numpy scalars as 1d arrays.
         return value
 
     if isinstance(value, (tuple, list)):
