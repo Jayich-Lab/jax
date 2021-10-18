@@ -283,14 +283,13 @@ class JaxEnvironment(HasEnvironment):
         params_full = {}
         pb = self.cxn.parameter_database
         for collection, name in self.parameter_paths:
-            if collection not in self._params:
+            if collection not in params:
                 params[collection] = {}
                 params_full[collection] = {}
-            else:
-                value = pb.get_parsed_value(collection, name)
-                params[collection][name] = remove_labrad_units(value)
-                value_full = pb.get_raw_form(collection, name)
-                params_full[collection][name] = remove_labrad_units(value_full)
+            value = pb.get_parsed_value(collection, name)
+            params[collection][name] = remove_labrad_units(value)
+            value_full = pb.get_raw_form(collection, name)
+            params_full[collection][name] = remove_labrad_units(value_full)
         self.p = ParameterGroup(params)
         self.add_attribute("parameters", pyon.encode(params))
         self.add_attribute("parameters_full", pyon.encode(params_full))

@@ -6,6 +6,10 @@ from jax import JaxApplet
 from jax.util.fast_plot_trace import FastPlotTrace
 
 
+
+__all__ = ["RealTimePlotApplet"]
+
+
 class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
     """Base applet for making a real-time updated plot.
 
