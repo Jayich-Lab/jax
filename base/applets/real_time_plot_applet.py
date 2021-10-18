@@ -6,7 +6,6 @@ from jax import JaxApplet
 from jax.util.fast_plot_trace import FastPlotTrace
 
 
-
 __all__ = ["RealTimePlotApplet"]
 
 
