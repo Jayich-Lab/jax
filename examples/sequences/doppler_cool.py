@@ -49,19 +49,9 @@ class DopplerCool(Sequence):
 
         self._cool_time_mu = self.exp.core.seconds_to_mu(cool_time)
 
-        self.set_frequencies()
-
-    @portable
-    def set_frequencies(self):
-        """Calculates frequencies.
-
-        This function is @portable to enable calling from the kernel. For example,
-        this allows updating DDS frequencies in the kernel when the drift trackers are updated.
-        """
-        d = self.p.doppler_cool
-        cool_frequency = self._cool_drift_tracker.get_frequency(d.cool_detuning)
+        cool_frequency = self._cool_drift_tracker.get_frequency_host(d.cool_detuning)
         self._cool_ftw = self._cool_dds.frequency_to_ftw(cool_frequency)
-        repump_frequency = self._repump_drift_tracker.get_frequency(d.repump_detuning)
+        repump_frequency = self._repump_drift_tracker.get_frequency_host(d.repump_detuning)
         self._repump_ftw = self._repump_dds.frequency_to_ftw(repump_frequency)
 
     @kernel

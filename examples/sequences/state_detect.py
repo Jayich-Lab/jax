@@ -56,19 +56,9 @@ class StateDetect(Sequence):
 
         self._detect_time_mu = self.exp.core.seconds_to_mu(s.detect_time)
 
-        self.set_frequencies()
-
-    @portable
-    def set_frequencies(self):
-        """Calculates frequencies.
-
-        This function is @portable to enable calling from the kernel.
-        This allows updating the DDS frequencies in the kernel when the drift tracker is updated.
-        """
-        s = self.p.state_detect
-        cool_frequency = self._cool_drift_tracker.get_frequency(s.cool_detuning)
+        cool_frequency = self._cool_drift_tracker.get_frequency_host(d.cool_detuning)
         self._cool_ftw = self._cool_dds.frequency_to_ftw(cool_frequency)
-        repump_frequency = self._repump_drift_tracker.get_frequency(s.repump_detuning)
+        repump_frequency = self._repump_drift_tracker.get_frequency_host(d.repump_detuning)
         self._repump_ftw = self._repump_dds.frequency_to_ftw(repump_frequency)
 
     @kernel
