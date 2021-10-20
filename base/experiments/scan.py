@@ -36,6 +36,7 @@ class Scan(JaxExperiment):
                 if should_stop:
                     break
                 else:
+                    self.turn_off_all_ddses()
                     self.kernel_run()
         except Exception as e:
             raise e
@@ -44,7 +45,6 @@ class Scan(JaxExperiment):
 
     def host_startup(self):
         """Called at the start of self.run(). Can be overriden."""
-        self.turn_off_all_ddses()
         self.open_file()
         self._scans_finished = 0
 

@@ -54,7 +54,6 @@ class PulseSequence(JaxExperiment, SinaraEnvironment):
 
     def run(self):
         try:
-            self.turn_off_all_ddses()
             self.repeats_done = 0  # tracks how many repeatitions have been done.
             self.open_file()  # opens up a file for writing data.
             # defines a instance variable that will be used in the kernel.
@@ -67,6 +66,7 @@ class PulseSequence(JaxExperiment, SinaraEnvironment):
                 if should_stop:
                     break
                 else:
+                    self.turn_off_all_ddses()
                     self.run_kernel()
         except Exception as e:
             raise e
