@@ -47,6 +47,7 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
         self.initialized_ttls, and self.uninitialized_ttls. The first element
         in each of these lists is a placeholder element for determining element type.
         """
+        self.urukuls = [self.get_device(kk) for kk in self.devices.urukuls]
         dds_params = pyon.decode(self.cxn.artiq.get_dds_parameters())
         dummy_dds = self.get_device(self.devices.ad9910s[0])
         self.initialized_ddses = [(dummy_dds, [0., 0., 0., 0., 0.])]  # DDSes in artiq server.
@@ -76,14 +77,22 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
     @kernel
     def run_kernel(self):
         self.core.reset()
+        for kk in range(len(self.urukuls)):
+            self.core.break_realtime()
+            self.urukuls[kk].init()
+
         for kk in range(len(self.initialized_ddses)):
             if kk > 0:
                 dds, values = self.initialized_ddses[kk]
+                self.core.break_realtime()
+                dds.init()
                 self._set_dds(dds, values)
 
         for kk in range(len(self.uninitialized_ddses)):
             if kk > 0:
                 dds, name = self.uninitialized_ddses[kk]
+                self.core.break_realtime()
+                dds.init()
                 self.get_dds(dds, name)
 
         for kk in range(len(self.initialized_ttls)):
