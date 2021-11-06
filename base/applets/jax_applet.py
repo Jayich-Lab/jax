@@ -19,7 +19,8 @@ class JaxApplet(QtCore.QObject):
 
         Args:
             applet: artiq.applets.simple.SimpleApplet object.
-            default_ip: str, default IP addres to connect to. Default "127.0.0.1" (local computer).
+            default_ip: str, default IP address to connect to.
+                Default "127.0.0.1" (local computer).
         """
         applet.argparser.add_argument("--ip", type=str, default=default_ip,
                                       help="LabRAD manager IP address to connect to")
