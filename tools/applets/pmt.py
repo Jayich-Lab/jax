@@ -167,16 +167,6 @@ class PMT(QtWidgets.QWidget, JaxApplet):
 
         self.run_in_labrad_loop(_start_button_toggled)(self, checked)
 
-    def start_button_toggled(self, checked):
-        async def _start_button_toggled(self, checked):
-            self._set_pmt_state(checked)
-            if checked:
-                await self.pmt.start()
-            else:
-                await self.pmt.stop()
-
-        self.run_in_labrad_loop(_start_button_toggled)(self, checked)
-
     def mode_combobox_text_changed(self, text):
         async def _mode_combobox_text_changed(self, text):
             await self.pmt.set_mode(text == self._differential_mode_text)
