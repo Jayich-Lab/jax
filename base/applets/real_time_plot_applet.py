@@ -49,7 +49,7 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         self.plot_widget = _pg.PlotWidget()
         self._set_axes_style(xlabel, ylabel)
         layout.addWidget(self.plot_widget, 0, 0)
-        self.coords = QtGui.QLabel("")
+        self.coords = QtWidgets.QLabel("")
         self.coords.setFont(QtGui.QFont("Arial", 15))
         layout.addWidget(self.coords, 1, 0)
         self.setLayout(layout)
