@@ -98,10 +98,10 @@ class SinaraEnvironment(JaxEnvironment):
 
     @kernel
     def _reset_urukuls(self):
-        """Sets all urukuls back to profile 0 (the default profile)."""
+        """Sets all urukuls back to profile 7 (the default profile)."""
         for name, urukul in self.devices.urukuls_used:
             self.core.break_realtime()
-            urukul.set_profile(0)
+            urukul.set_profile(7)
 
     @kernel
     def _reset_ad9910s(self, params):
