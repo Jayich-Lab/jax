@@ -41,7 +41,7 @@ class DDSParameters:
 
     def set_att(self, value, update=True):
         if value != self._att and update:
-            command = (self.channel, "att", value)
+            command = (self.channel, "attenuation", value)
             self._change_dds(command)
         self._att = value
 
