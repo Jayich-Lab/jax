@@ -90,6 +90,7 @@ class SinaraEnvironment(JaxEnvironment):
         """Turns off the rf switches and sets amplitudes to 0."""
         for name, ad9910 in self.devices.ad9910s_used:
             self.core.break_realtime()
+            delay_mu(self.rtio_cycle_mu)
             ad9910.sw.off()
             freq, phase, amp = ad9910.get()
             self.core.break_realtime()
@@ -101,6 +102,7 @@ class SinaraEnvironment(JaxEnvironment):
         """Sets all urukuls back to profile 7 (the default profile)."""
         for name, urukul in self.devices.urukuls_used:
             self.core.break_realtime()
+            delay_mu(self.rtio_cycle_mu)
             urukul.set_profile(7)
 
     @kernel
@@ -128,6 +130,7 @@ class SinaraEnvironment(JaxEnvironment):
             values: list of floats, [frequency, phase, amplitude, attenuation, and state].
         """
         self.core.break_realtime()
+        delay_mu(self.rtio_cycle_mu)
         delay_mu(self.dds_set_delay_mu)
         device.set(values[0], values[1], values[2])
         self.core.break_realtime()
@@ -150,6 +153,7 @@ class SinaraEnvironment(JaxEnvironment):
             values: float, state, -1. (off), 1. (on).
         """
         self.core.break_realtime()
+        delay_mu(self.rtio_cycle_mu)
         if value > 0.:
             device.on()
         else:
