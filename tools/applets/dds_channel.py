@@ -1,4 +1,5 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
+from jax.util.ui.dialog_on_top import DialogOnTop
 
 
 class DDSParameters:
@@ -74,14 +75,11 @@ class DDSParameters:
         self.parent.run_in_labrad_loop(worker)(self, command)
 
 
-class DDSDetail(QtWidgets.QDialog):
+class DDSDetail(DialogOnTop):
     """A dialog showing details for a channel."""
     def __init__(self, dds_parameters, parent=None):
         self.dds_parameters = dds_parameters
-        super().__init__(
-            parent,
-            QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint
-            | QtCore.Qt.WindowCloseButtonHint)
+        super().__init__(parent)
         self.setWindowTitle(dds_parameters.channel)
         self.initialize_gui()
         self.setup_gui_listeners()

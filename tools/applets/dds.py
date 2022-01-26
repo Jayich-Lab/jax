@@ -4,6 +4,7 @@ from PyQt5 import QtGui, QtWidgets, QtCore
 from artiq.applets.simple import SimpleApplet
 from jax import JaxApplet
 from jax.tools.applets.dds_channel import DDSChannel, DDSParameters
+from jax.util.ui.custom_list_widget import CustomListWidget
 
 
 class DDS(QtWidgets.QWidget, JaxApplet):
@@ -24,14 +25,8 @@ class DDS(QtWidgets.QWidget, JaxApplet):
     def initialize_gui(self):
         font = QtGui.QFont("Arial", 15)
         layout = QtWidgets.QGridLayout()
-        self.grid = QtWidgets.QListWidget()
-        self.grid.setAcceptDrops(False)
-        self.grid.setDragEnabled(False)
-        self.grid.setDragDropMode(QtWidgets.QAbstractItemView.NoDragDrop)
-        self.grid.setFlow(QtWidgets.QListView.LeftToRight)
-        self.grid.setResizeMode(QtWidgets.QListView.Adjust)
-        self.grid.setViewMode(QtWidgets.QListView.IconMode)
-        layout.addWidget(self.grid)
+        self.list_widget = CustomListWidget()
+        layout.addWidget(self.list_widget)
         self.setLayout(layout)
 
     async def labrad_connected(self):
@@ -65,14 +60,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
             self.channels[channel] = channel_widget
             self._still_looping = False
 
-            item = QtWidgets.QListWidgetItem()
-            size = channel_widget.sizeHint()
-            padding = 10
-            new_size = QtCore.QSize(size.width() + padding, size.height() + padding)
-            item.setSizeHint(size)
-            self.grid.setGridSize(new_size)
-            self.grid.addItem(item)
-            self.grid.setItemWidget(item, channel_widget)
+            self.list_widget.add_item_and_widget(channel, channel_widget)
 
     async def setup_cxn_listeners(self):
         self.cxn.add_on_connect("artiq", self.run_in_labrad_loop(self.artiq_connected))
