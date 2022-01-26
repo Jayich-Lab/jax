@@ -25,6 +25,9 @@ class DDS(QtWidgets.QWidget, JaxApplet):
         font = QtGui.QFont("Arial", 15)
         layout = QtWidgets.QGridLayout()
         self.grid = QtWidgets.QListWidget()
+        self.grid.setAcceptDrops(False)
+        self.grid.setDragEnabled(False)
+        self.grid.setDragDropMode(QtWidgets.QAbstractItemView.NoDragDrop)
         self.grid.setFlow(QtWidgets.QListView.LeftToRight)
         self.grid.setResizeMode(QtWidgets.QListView.Adjust)
         self.grid.setViewMode(QtWidgets.QListView.IconMode)
@@ -63,8 +66,11 @@ class DDS(QtWidgets.QWidget, JaxApplet):
             self._still_looping = False
 
             item = QtWidgets.QListWidgetItem()
-            item.setSizeHint(channel_widget.sizeHint())
-            self.grid.setGridSize(channel_widget.sizeHint())
+            size = channel_widget.sizeHint()
+            padding = 10
+            new_size = QtCore.QSize(size.width() + padding, size.height() + padding)
+            item.setSizeHint(size)
+            self.grid.setGridSize(new_size)
             self.grid.addItem(item)
             self.grid.setItemWidget(item, channel_widget)
 
