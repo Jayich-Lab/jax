@@ -1,4 +1,3 @@
-import asyncio
 import numpy as _np
 import pyqtgraph as _pg
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -29,8 +28,7 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
     set_data = QtCore.pyqtSignal(str, _np.ndarray)
     append_data = QtCore.pyqtSignal(str, _np.ndarray)
 
-    def __init__(self, num_of_traces, dataset_names, xlabel="", ylabel="", scrolling=True,
-                 ip="127.0.0.1", **kwds):
+    def __init__(self, num_of_traces, dataset_names, xlabel="", ylabel="", scrolling=True, **kwds):
         super().__init__(**kwds)
         self.num_of_traces = num_of_traces
         self.dataset_names = dataset_names
@@ -42,7 +40,7 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
 
         self.set_data.connect(self._set)
         self.append_data.connect(self._append)
-        self.connect_to_labrad(ip)
+        self.connect_to_labrad(self.args.ip)
 
     def _initialize_gui(self, xlabel, ylabel):
         layout = QtWidgets.QGridLayout(self)

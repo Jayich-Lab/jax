@@ -1,10 +1,9 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
-from artiq.applets.simple import SimpleApplet
 from jax import JaxApplet
 
 
 class PMT(QtWidgets.QWidget, JaxApplet):
-    def __init__(self, args, **kwds):
+    def __init__(self, **kwds):
         super().__init__(**kwds)
         self._dv_on = False
         self._pmt_on = False
@@ -16,7 +15,7 @@ class PMT(QtWidgets.QWidget, JaxApplet):
 
         self.initialize_gui()
         # connects to LabRAD in a different thread, and calls self.labrad_connected when finished.
-        self.connect_to_labrad(args.ip)
+        self.connect_to_labrad(self.args.ip)
 
     def set_disable_state(self):
         if self._pmt_on and self._dv_on:
@@ -198,9 +197,15 @@ class PMT(QtWidgets.QWidget, JaxApplet):
 
 
 def main():
-    applet = SimpleApplet(PMT)
-    PMT.add_labrad_ip_argument(applet)  # adds IP address as an argument.
-    applet.run()
+    import asyncio
+    from qasync import QEventLoop
+    app = QtWidgets.QApplication([])
+    loop = QEventLoop()
+    asyncio.set_event_loop(loop)
+    applet = PMT()
+    applet.show()
+    with loop:
+        loop.run_forever()
 
 
 if __name__ == "__main__":

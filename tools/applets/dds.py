@@ -1,7 +1,5 @@
-import time
 from sipyco import pyon
-from PyQt5 import QtGui, QtWidgets, QtCore
-from artiq.applets.simple import SimpleApplet
+from PyQt5 import QtWidgets, QtCore
 from jax import JaxApplet
 from jax.tools.applets.dds_channel import DDSChannel, DDSParameters
 from jax.util.ui.custom_list_widget import CustomListWidget
@@ -13,17 +11,15 @@ class DDS(QtWidgets.QWidget, JaxApplet):
     # widgets can only be created in the default thread.
     do_initialize = QtCore.pyqtSignal()
 
-    def __init__(self, args, **kwds):
+    def __init__(self, **kwds):
         super().__init__(**kwds)
         self.setDisabled(True)  # start with the applet disabled, until artiq server is connected.
         self.do_initialize.connect(self.initialize_channels)
-
         self.initialize_gui()
         # connects to LabRAD in a different thread, and calls self.labrad_connected when finished.
-        self.connect_to_labrad(args.ip)
+        self.connect_to_labrad(self.args.ip)
 
     def initialize_gui(self):
-        font = QtGui.QFont("Arial", 15)
         layout = QtWidgets.QGridLayout()
         self.list_widget = CustomListWidget()
         layout.addWidget(self.list_widget)
@@ -82,9 +78,15 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
 
 def main():
-    applet = SimpleApplet(DDS)
-    DDS.add_labrad_ip_argument(applet)  # adds IP address as an argument.
-    applet.run()
+    import asyncio
+    from qasync import QEventLoop
+    app = QtWidgets.QApplication([])
+    loop = QEventLoop()
+    asyncio.set_event_loop(loop)
+    applet = DDS()
+    applet.show()
+    with loop:
+        loop.run_forever()
 
 
 if __name__ == "__main__":
