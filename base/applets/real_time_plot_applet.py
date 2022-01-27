@@ -3,7 +3,7 @@ import numpy as _np
 import pyqtgraph as _pg
 from PyQt5 import QtCore, QtGui, QtWidgets
 from jax import JaxApplet
-from jax.util.fast_plot_trace import FastPlotTrace
+from jax.util.ui.fast_plot_trace import FastPlotTrace
 
 
 __all__ = ["RealTimePlotApplet"]
