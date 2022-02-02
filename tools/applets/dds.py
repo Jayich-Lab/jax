@@ -19,6 +19,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
         self.do_initialize.connect(self.initialize_channels)
 
         self.initialize_gui()
+        self.load_config_file("dds", args)
         # connects to LabRAD in a different thread, and calls self.labrad_connected when finished.
         self.connect_to_labrad(args.ip)
 
@@ -62,6 +63,16 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
             self.list_widget.add_item_and_widget(channel, channel_widget)
 
+        if "list_widget" not in self.config:
+            self.config["list_widget"] = {}
+        self.list_widget_reordered(self.list_widget.set_visibility_and_order(
+            self.config["list_widget"]))
+        self.list_widget.visibility_and_order_changed.connect(self.list_widget_reordered)
+
+    def list_widget_reordered(self, widget_config):
+        self.config["list_widget"] = widget_config
+        self.save_config_file()
+
     async def setup_cxn_listeners(self):
         self.cxn.add_on_connect("artiq", self.run_in_labrad_loop(self.artiq_connected))
         self.cxn.add_on_disconnect("artiq", self.artiq_disconnected)
@@ -84,6 +95,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 def main():
     applet = SimpleApplet(DDS)
     DDS.add_labrad_ip_argument(applet)  # adds IP address as an argument.
+    DDS.add_id_argument(applet)
     applet.run()
 
 

@@ -48,7 +48,7 @@ class JaxApplet(QtCore.QObject):
     def load_config_file(self, module_name, args):
         """Loads the config file content into self.config.
 
-        Arguments:
+        Args:
             module_name: str, applet module name.
             args: command line arguments.
         """
@@ -61,7 +61,8 @@ class JaxApplet(QtCore.QObject):
         except AttributeError:
             id = ""
         folder_name = os.path.join(os.path.expanduser('~'), ".jax", "applets")
-        pathlib.Path(folder_name).mkdir(parents=True, exist_ok=True)  # create the folder if it does not exist
+        # create the folder if it does not exist
+        pathlib.Path(folder_name).mkdir(parents=True, exist_ok=True)
 
         self._config_file_path = os.path.join(folder_name, f"{module_name}_{ip}_{id}.pyon")
         try:
