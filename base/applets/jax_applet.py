@@ -1,6 +1,9 @@
+import os
 import asyncio
 import threading
+import pathlib
 from PyQt5 import QtCore
+from sipyco import pyon
 
 
 __all__ = ["JaxApplet"]
@@ -25,9 +28,51 @@ class JaxApplet(QtCore.QObject):
         applet.argparser.add_argument("--ip", type=str, default=default_ip,
                                       help="LabRAD manager IP address to connect to")
 
+    @classmethod
+    def add_id_argument(self, applet, default_id=""):
+        """Adds an argument to set the ID of the applet.
+
+        Applet ID is used to assign different config files to instances of a same applet class.
+
+        Args:
+            applet: artiq.applets.simple.SimpleApplet object.
+            default_id: str, default ID of the applet. Default "".
+        """
+        applet.argparser.add_argument("--id", type=str, default=default_id,
+                                      help="Configuration ID")
+
     def __init__(self, **kwds):
         super().__init__(**kwds)
         self._labrad_loop = None
+
+    def load_config_file(self, module_name, args):
+        """Loads the config file content into self.config.
+
+        Args:
+            module_name: str, applet module name.
+            args: command line arguments.
+        """
+        try:
+            ip = args.ip
+        except AttributeError:
+            ip = "none"
+        try:
+            id = args.id
+        except AttributeError:
+            id = ""
+        folder_name = os.path.join(os.path.expanduser('~'), ".jax", "applets")
+        # create the folder if it does not exist
+        pathlib.Path(folder_name).mkdir(parents=True, exist_ok=True)
+
+        self._config_file_path = os.path.join(folder_name, f"{module_name}_{ip}_{id}.pyon")
+        try:
+            self.config = pyon.load_file(self._config_file_path)
+        except FileNotFoundError:
+            self.config = {}
+
+    def save_config_file(self):
+        """Write self.config to the config file."""
+        pyon.store_file(self._config_file_path, self.config)
 
     def connect_to_labrad(self, ip="127.0.0.1"):
         """Connects to labrad in another thread (non-blocking).

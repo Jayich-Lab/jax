@@ -8,6 +8,10 @@ class CustomListWidget(QtWidgets.QListWidget):
     Do not call self.addItem() or self.addItemWidget() directly.
     Use self.add_item_and_widget() instead.
     """
+    # when the items' visibility and order are changed.
+    # this signal is only triggered when the visibility and order are updated in the popup window.
+    visibility_and_order_changed = QtCore.pyqtSignal(dict)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.visible_items = []
@@ -27,7 +31,7 @@ class CustomListWidget(QtWidgets.QListWidget):
 
         Args:
             name: str, name of the item.
-            widget: QWodget, widget to add to the ListWidget.
+            widget: QWidget, widget to add to the ListWidget.
             visible: bool, whether the widget should be visible. Default is True.
             sort_index: int, order of the item in the ListWidget. If None, the displayed order
                 is the same as the order added. Default is None.
@@ -57,6 +61,52 @@ class CustomListWidget(QtWidgets.QListWidget):
         self.all_items[name] = item
         self.sortItems()
         self.setDragEnabled(False)
+
+    def set_visibility_and_order(self, widget_config):
+        """Sets the visibility and order of items in the ListWidget based on a config.
+
+        This function should be called after the list widget is fully populated.
+
+        If an item is in the ListWidget but not in the config, it is set to visible.
+        If an item is in the config but not in the ListWidget, the item in the config is ignored.
+
+        The config file should be updated with the return value of this function.
+
+        Args:
+            widget_config: dict,
+                {
+                    "visible_items": ["name_1", "name_2"],
+                    "hidden_items": ["name_3", "name_4"]
+                }
+                where "name_x" is the name added in add_item_and_widget.
+                widget_config can be an empty dict and it would not change the GUI.
+
+        Returns:
+            updated_widget_config: dict, widget_config with the missing items added and
+                the extra items removed.
+        """
+        all_items = self.visible_items + self.hidden_items
+        self.visible_items = []
+        self.hidden_items = []
+        if "visible_items" in widget_config:  # adds all visible items in the config
+            for name in widget_config["visible_items"]:
+                if name in all_items:
+                    self.visible_items.append(name)
+        if "hidden_items" in widget_config:  # adds all hidden items in the config
+            for name in widget_config["hidden_items"]:
+                if name in all_items:
+                    self.hidden_items.append(name)
+        for name in all_items:  # adds items that are not defined in the config
+            if name not in self.visible_items and name not in self.hidden_items:
+                self.visible_items.append(name)
+        self.update_ui()
+        return self._get_config()
+
+    def _get_config(self):
+        config = {}
+        config["visible_items"] = list(self.visible_items)
+        config["hidden_items"] = list(self.hidden_items)
+        return config
 
     def update_ui(self):
         for name in self.all_items:
@@ -88,6 +138,7 @@ class CustomListWidget(QtWidgets.QListWidget):
             self.visible_items = dialog.visible_items
             self.hidden_items = dialog.hidden_items
             self.update_ui()
+            self.visibility_and_order_changed.emit(self._get_config())
 
     def addItem(self, item):
         """Do not call this directly. Use self.add_item_and_widget() instead."""
