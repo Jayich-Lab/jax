@@ -281,7 +281,7 @@ class JaxEnvironment(HasEnvironment):
 
         params = {}
         params_full = {}
-        pb = self.cxn.parameter_database
+        pb = self.cxn.parameter_bank
         for collection, name in self.parameter_paths:
             if collection not in params:
                 params[collection] = {}
