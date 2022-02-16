@@ -140,6 +140,13 @@ class CustomListWidget(QtWidgets.QListWidget):
             self.update_ui()
             self.visibility_and_order_changed.emit(self._get_config())
 
+    def clear(self):
+        """Overloads the parent clear function to properly clear the extra attributes."""
+        self.visible_items = []
+        self.hidden_items = []
+        self.all_items = {}
+        super().clear()
+
     def addItem(self, item):
         """Do not call this directly. Use self.add_item_and_widget() instead."""
         if not isinstance(item, _CustomListWidgetItem):

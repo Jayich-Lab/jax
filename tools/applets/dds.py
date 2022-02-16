@@ -37,18 +37,27 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
     async def artiq_connected(self):
         self.artiq = self.cxn.get_server("artiq")
+        initialize_now = await self.artiq.is_dds_initialized()
+        if initialize_now:
+            await self.get_dds_parameters()
+
+        SIGNALID = 124890
+        await self.artiq.on_dds_change(SIGNALID)
+        self.artiq.addListener(listener=self._dds_changed, source=None, ID=SIGNALID)
+        await self.artiq.on_dds_initialize(SIGNALID + 1)
+        self.artiq.addListener(listener=self._dds_initialized, source=None, ID=SIGNALID+1)
+
+    async def get_dds_parameters(self):
         self.params = await self.artiq.get_dds_parameters()
         self.params = pyon.decode(self.params)
-        self.do_initialize.emit()  # tells the main thread that it can populate the DDS channels.
-
-        DDS_CHANGE = 124890
-        await self.artiq.on_dds_change(DDS_CHANGE)
-        self.artiq.addListener(listener=self._dds_changed, source=None, ID=DDS_CHANGE)
+        # tells the main thread that it can populate the DDS channels.
+        self.do_initialize.emit()
         self.setDisabled(False)
 
     @QtCore.pyqtSlot()
     def initialize_channels(self):
         self.channels = {}
+        self.list_widget.clear()
         for channel in self.params:
             cpld = "Not implemented"  # current code does not query the cpld name.
             frequency = self.params[channel][0]
@@ -90,6 +99,9 @@ class DDS(QtWidgets.QWidget, JaxApplet):
             self.channels[channel].on_monitor_att_changed(val)
         elif attribute == "state":
             self.channels[channel].on_monitor_switch_changed(val > 0.)
+
+    def _dds_initialized(self, signal, value):
+        self.run_in_labrad_loop(self.get_dds_parameters)()
 
 
 def main():
