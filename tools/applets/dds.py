@@ -101,7 +101,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
             self.channels[channel].on_monitor_switch_changed(val > 0.)
 
     def _dds_initialized(self, signal, value):
-        self.run_in_labrad_loop(self.get_dds_parameters)(self, text)
+        self.run_in_labrad_loop(self.get_dds_parameters)()
 
 
 def main():
