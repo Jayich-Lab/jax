@@ -153,7 +153,7 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         print("New PMT file automatically created.")
         
     def _on_start_and_stop(self, signal, value):
-        self.start_button_toggled(self, value)
+        self.start_button_toggled(value)
 
     def _set_number(self, counts):
         self.number.display(counts)
