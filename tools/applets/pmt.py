@@ -151,7 +151,7 @@ class PMT(QtWidgets.QWidget, JaxApplet):
 
     def _auto_new_file(self, signal, value):
         print("New PMT file automatically created.")
-        
+
     def _on_start_and_stop(self, signal, value):
         self._set_pmt_state(value)
 
