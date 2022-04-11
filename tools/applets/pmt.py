@@ -111,6 +111,9 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         AUTO_NEW_FILE = 128940
         await self.pmt.on_auto_new_file(AUTO_NEW_FILE)
         self.pmt.addListener(listener=self._auto_new_file, source=None, ID=AUTO_NEW_FILE)
+        START_STOP = 128941
+        await self.pmt.on_start_and_stop(START_STOP)
+        self.pmt.addListener(listener=self._on_start_and_stop, source=None, ID=START_STOP)
         self.set_disable_state()
 
     async def setup_cxn_listeners(self):
@@ -148,6 +151,9 @@ class PMT(QtWidgets.QWidget, JaxApplet):
 
     def _auto_new_file(self, signal, value):
         print("New PMT file automatically created.")
+
+    def _on_start_and_stop(self, signal, value):
+        self._set_pmt_state(value)
 
     def _set_number(self, counts):
         self.number.display(counts)
