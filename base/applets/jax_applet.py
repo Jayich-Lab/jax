@@ -102,7 +102,7 @@ class JaxApplet(QtCore.QObject):
 
     async def labrad_worker(self, ip):
         """Worker to connect to labrad in self._labrad_loop event loop."""
-        from pydux.lib.control.clients.connection_asyncio import ConnectionAsyncio
+        from pydux.control.clients.connection_asyncio import ConnectionAsyncio
         self.cxn = ConnectionAsyncio()
         await self.cxn.connect(ip)
         await self.labrad_connected()
