@@ -10,6 +10,7 @@ class _PlotPath(_pg.QtGui.QGraphicsPathItem):
     a path can be generated for every n data points. The path can be plotted instead of the
     n data points it replaces.
     """
+
     def __init__(self, x, y, pen):
         self.path = _pg.arrayToQPath(x.flatten(), y.flatten())
         super().__init__(self.path)
@@ -53,7 +54,7 @@ class FastPlotTrace(QtCore.QObject):
         self._xdata = None
         self._ydata = None
 
-    def update_trace(self):
+    def update_trace(self, name=None):
         """Updates the trace on the plot."""
         if self._xdata is None or self._ydata is None:
             return
@@ -85,7 +86,7 @@ class FastPlotTrace(QtCore.QObject):
         if self._plot_data_item is not None:
             self._plot_data_item.setData(xdata, ydata)
         else:
-            self._plot_data_item = self._plot_widget.plot(xdata, ydata, pen=self._pen)
+            self._plot_data_item = self._plot_widget.plot(xdata, ydata, pen=self._pen, name=name)
         self._last_length = len_plot
         self.trace_updated.emit(last_x)
 
@@ -100,7 +101,7 @@ class FastPlotTrace(QtCore.QObject):
         self._last_length = -1
         self.trace_removed.emit()
 
-    def set(self, xdata, ydata):
+    def set(self, xdata, ydata, name=None):
         """Sets data, clears the existing trace, and plots the new trace.
 
         Args:
@@ -110,7 +111,7 @@ class FastPlotTrace(QtCore.QObject):
         self._xdata = _np.array(xdata)
         self._ydata = _np.array(ydata)
         self.remove_trace()
-        self.update_trace()
+        self.update_trace(name)
 
     def append_x(self, xdata):
         """Appends to the x-axis data."""
