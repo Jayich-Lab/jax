@@ -93,7 +93,7 @@ class JaxApplet(QtCore.QObject):
             self._labrad_loop.create_task(self.labrad_worker(ip))
             self._labrad_loop.run_forever()
 
-        self._labrad_thread = threading.Thread(target=worker)
+        self._labrad_thread = threading.Thread(target=worker, daemon=True)
         self._labrad_thread.start()
 
     def data_changed(self, data, mods):
