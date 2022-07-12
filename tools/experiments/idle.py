@@ -4,10 +4,10 @@ from artiq.experiment import *
 from jax import JaxExperiment, SinaraEnvironment
 
 
-__all__ = ["PMT"]
+__all__ = ["IDLE"]
 
 
-class PMT(JaxExperiment, SinaraEnvironment):
+class IDLE(JaxExperiment, SinaraEnvironment):
     """Base class for a background running experiment that reads PMT and sets TTL/DDS parameters.
 
     Inherit this class in the experiment repository and define the class variables:
