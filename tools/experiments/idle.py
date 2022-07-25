@@ -1,5 +1,5 @@
 import time as _t
-from sipyco import pyon
+import pickle as _p
 from artiq.experiment import *
 from jax import JaxExperiment, SinaraEnvironment
 
@@ -66,7 +66,7 @@ class IDLE(JaxExperiment, SinaraEnvironment):
 
         If a repump AOM is set to off, don't turn it on during the differential mode sequence.
         """
-        dds_params = pyon.decode(self.cxn.artiq.get_dds_parameters())
+        dds_params = _p.loads(self.cxn.artiq.get_dds_parameters())
         self.repump_aom_states = []
         for kk in self.REPUMP_AOM_CHANNELS:
             self.repump_aom_states.append(dds_params[kk][-1])

@@ -2,8 +2,8 @@ import os
 import asyncio
 import threading
 import pathlib
+import pickle
 from PyQt5 import QtCore
-from sipyco import pyon
 
 
 __all__ = ["JaxApplet"]
@@ -64,15 +64,17 @@ class JaxApplet(QtCore.QObject):
         # create the folder if it does not exist
         pathlib.Path(folder_name).mkdir(parents=True, exist_ok=True)
 
-        self._config_file_path = os.path.join(folder_name, f"{module_name}_{ip}_{id}.pyon")
+        self._config_file_path = os.path.join(folder_name, f"{module_name}_{ip}_{id}.pickle")
         try:
-            self.config = pyon.load_file(self._config_file_path)
+            with open(self._config_file_path, "rb") as f:
+                self.config = pickle.load(f)
         except FileNotFoundError:
             self.config = {}
 
     def save_config_file(self):
         """Write self.config to the config file."""
-        pyon.store_file(self._config_file_path, self.config)
+        with open(self._config_file_path, "wb") as f:
+            pickle.dump(self.config, f, protocol=4)
 
     def connect_to_labrad(self, ip="127.0.0.1"):
         """Connects to labrad in another thread (non-blocking).

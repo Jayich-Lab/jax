@@ -1,5 +1,5 @@
 import numpy as _np
-from sipyco import pyon
+import pickle as _p
 from artiq.experiment import *
 from jax import JaxEnvironment
 from jax.util.devices import Devices
@@ -38,8 +38,8 @@ class SinaraEnvironment(JaxEnvironment):
         super().prepare()
         self.rtio_cycle_mu = _np.int64(self.core.ref_multiplier)
         self.dds_set_delay_mu = self.core.seconds_to_mu(200*us)
-        self._preexp_dds_params = pyon.decode(self.cxn.artiq.get_dds_parameters())
-        self._preexp_ttl_params = pyon.decode(self.cxn.artiq.get_ttl_parameters())
+        self._preexp_dds_params = _p.loads(self.cxn.artiq.get_dds_parameters())
+        self._preexp_ttl_params = _p.loads(self.cxn.artiq.get_ttl_parameters())
 
     @host_only
     def get_device(self, key):
