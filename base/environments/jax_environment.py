@@ -1,5 +1,5 @@
 import threading
-from sipyco import pyon
+import pickle
 from artiq.experiment import *
 from jax.util.parameter_group import ParameterGroup
 from jax.util.drift_tracker import DriftTracker
@@ -113,7 +113,7 @@ class JaxEnvironment(HasEnvironment):
         rid, pipeline_name, priority, expid = self._get_experiment_info()
         self.dv.open(expid["class_name"], True, rid)
         self.dv.add_attribute("rid", rid, "scheduler")
-        self.dv.add_attribute("expid", pyon.encode(expid), "scheduler")
+        self.dv.add_attribute("expid", pickle.dumps(expid, protocol=4), "scheduler")
         self.dv.add_attribute("pipeline_name", pipeline_name, "scheduler")
         self.dv.add_attribute("priority", priority, "scheduler")
         self._is_dataset_open = True
@@ -291,8 +291,8 @@ class JaxEnvironment(HasEnvironment):
             value_full = pb.get_raw_form(collection, name)
             params_full[collection][name] = remove_labrad_units(value_full)
         self.p = ParameterGroup(params)
-        self.add_attribute("parameters", pyon.encode(params))
-        self.add_attribute("parameters_full", pyon.encode(params_full))
+        self.add_attribute("parameters", pickle.dumps(params, protocol=4))
+        self.add_attribute("parameters_full", pickle.dumps(params_full, protocol=4))
 
     @host_only
     def get_drift_tracker(self, name):
@@ -302,6 +302,6 @@ class JaxEnvironment(HasEnvironment):
             self.drift_trackers = {}
         if name not in self.drift_trackers:
             value = self.cxn.drift_tracker.get_drift_tracker(name)
-            self.drift_trackers[name] = DriftTracker(pyon.decode(value))
+            self.drift_trackers[name] = DriftTracker(pickle.dumps(value, protocol=4))
             self.add_attribute(name, value, "drift_trackers")
         return self.drift_trackers[name]

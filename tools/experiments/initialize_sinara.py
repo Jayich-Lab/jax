@@ -1,4 +1,4 @@
-from sipyco import pyon
+import pickle
 from artiq.experiment import *
 from jax import JaxExperiment, SinaraEnvironment
 
@@ -48,7 +48,7 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
         in each of these lists is a placeholder element for determining element type.
         """
         self.urukuls = [self.get_device(kk) for kk in self.devices.urukuls]
-        dds_params = pyon.decode(self.cxn.artiq.get_dds_parameters())
+        dds_params = pickle.loads(self.cxn.artiq.get_dds_parameters())
         dummy_dds = self.get_device(self.devices.ad9910s[0])
         self.initialized_ddses = [(dummy_dds, [0., 0., 0., 0., 0.])]  # DDSes in artiq server.
         self.uninitialized_ddses = [(dummy_dds, "")]  # DDSes not in artiq server.
@@ -61,7 +61,7 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
             if name not in dds_params:
                 self.uninitialized_ddses.append((self.get_device(name), name))
 
-        ttl_params = pyon.decode(self.cxn.artiq.get_ttl_parameters())
+        ttl_params = pickle.loads(self.cxn.artiq.get_ttl_parameters())
         dummy_ttl = self.get_device(self.devices.ttl_outs[0])
         self.initialized_ttls = [(dummy_ttl, 0.)]
         self.uninitialized_ttls = [(dummy_ttl, "")]

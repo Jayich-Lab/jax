@@ -1,4 +1,4 @@
-from sipyco import pyon
+import pickle
 from artiq.experiment import *
 from jax import JaxExperiment, SinaraEnvironment
 from jax.examples.sequences.example2 import Example2
@@ -107,18 +107,18 @@ class PulseSequence(JaxExperiment, SinaraEnvironment):
             }
         }
         self.p = ParameterGroup(params)
-        self.add_attribute("parameters", pyon.encode(params))
+        self.add_attribute("parameters", pickle.dumps(params, protocol=4))
 
     def get_mock_drift_trackers(self):
         self.drift_trackers = {}
         param_468 = {"center_frequency": 260*MHz, "detuning_factor": -2, "center_drift_rate": 0.,
                      "last_calibration": 0., "Zeeman": None}
         self.drift_trackers["468"] = DriftTracker(param_468)
-        self.add_attribute("468", pyon.encode(param_468), "drift_trackers")
+        self.add_attribute("468", pickle.dumps(param_468, protocol=4), "drift_trackers")
         param_1079 = {"center_frequency": 105*MHz, "detuning_factor": -2, "center_drift_rate": 0.,
                       "last_calibration": 0., "Zeeman": None}
-        self.drift_trackers["1079"] = DriftTracker(param_1079)
-        self.add_attribute("1079", pyon.encode(param_1079), "drift_trackers")
+        self.drift_trackers["1079"] = DriftTracker(param_1079, protocol=4)
+        self.add_attribute("1079", pickle.dumps(param_1079), "drift_trackers")
 
     @kernel
     def run_kernel(self):

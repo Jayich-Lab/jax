@@ -1,5 +1,5 @@
 import time
-from sipyco import pyon
+import pickle
 from PyQt5 import QtGui, QtWidgets, QtCore
 from artiq.applets.simple import SimpleApplet
 from jax import JaxApplet
@@ -49,7 +49,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
     async def get_dds_parameters(self):
         self.params = await self.artiq.get_dds_parameters()
-        self.params = pyon.decode(self.params)
+        self.params = pickle.loads(self.params)
         # tells the main thread that it can populate the DDS channels.
         self.do_initialize.emit()
         self.setDisabled(False)
