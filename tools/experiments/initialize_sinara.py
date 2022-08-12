@@ -121,7 +121,7 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
 
     @rpc
     def update_dds(self, name: TStr, values: TList(TFloat)):
-        self.cxn.artiq.update_sinara_dds_value_from_int_experiment(name, values)
+        self.cxn.artiq.update_sinara_dds_value_from_init_experiment(name, values)
 
     @kernel
     def get_ttl(self, device, name):
@@ -130,4 +130,4 @@ class InitializeSinara(JaxExperiment, SinaraEnvironment):
 
     @rpc
     def update_ttl(self, name: TStr, value: TFloat):
-        self.cxn.artiq.update_sinara_ttl_value_from_int_experiment(name, value)
+        self.cxn.artiq.update_sinara_ttl_value_from_init_experiment(name, value)
