@@ -158,3 +158,15 @@ class SinaraEnvironment(JaxEnvironment):
             device.on()
         else:
             device.off()
+
+    @kernel(flags={"fast-math"})
+    def _set_dac(self, device, value):
+        """Sets voltages of a DAC.
+
+        Args:
+            device: Zotino or Fastino, DAC device.
+            voltages: list of floats, correspond to voltages on pins.
+        """
+        self.core.break_realtime()
+        delay_mu(self.rtio_cycle_mu)
+        device.set_dac(value)
