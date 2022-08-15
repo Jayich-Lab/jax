@@ -284,17 +284,23 @@ class JaxEnvironment(HasEnvironment):
         Also saves all parameters to the data file.
         """
         from jax.util.labrad import remove_labrad_units
-
-        params = {}
-        params_full = {}
         pb = self.cxn.parameter_bank
+        params_serialized, params_full_serialized = pb.get_frozen_parameters(self.scheduler.rid)
+        params = pickle.loads(params_serialized)
+        params_full = pickle.loads(params_full_serialized)
         for collection, name in self.parameter_paths:
             if collection not in params:
                 params[collection] = {}
                 params_full[collection] = {}
-            value = pb.get_parsed_value(collection, name)
+            if name not in params[collection]:
+                value = pb.get_parsed_value(collection, name)
+            else:
+                value = params[collection][name]
             params[collection][name] = remove_labrad_units(value)
-            value_full = pb.get_raw_form(collection, name)
+            if name not in params_full[collection]:
+                value_full = pb.get_raw_form(collection, name)
+            else:
+                value = params_full[collection][name]
             params_full[collection][name] = remove_labrad_units(value_full)
         self.p = ParameterGroup(params)
         self.add_attribute("parameters", self.serialize(params))
