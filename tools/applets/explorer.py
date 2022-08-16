@@ -41,11 +41,11 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 
         self._disconnected_reported = False
         asyncio.get_event_loop().run_until_complete(
-            self.connect_subscribers()
+            self.connect_subscribers()  # run in the main thread asyncio loop.
         )
 
         self.initialize_gui()
-        self.connect_to_labrad(args.ip)
+        self.connect_to_labrad("::1")  # only works on localhost.
 
     async def connect_subscribers(self):
         localhost = "::1"
@@ -203,7 +203,6 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 def main():
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     applet = SimpleApplet(Explorer)
-    Explorer.add_labrad_ip_argument(applet)
     applet.run()
 
 
