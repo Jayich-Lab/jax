@@ -300,7 +300,7 @@ class JaxEnvironment(HasEnvironment):
             if name not in params_full[collection]:
                 value_full = pb.get_raw_form(collection, name)
             else:
-                value = params_full[collection][name]
+                value_full = params_full[collection][name]
             params_full[collection][name] = remove_labrad_units(value_full)
         self.p = ParameterGroup(params)
         self.add_attribute("parameters", self.serialize(params))

@@ -3,7 +3,6 @@ import importlib.util
 import logging
 import os
 import pickle
-from functools import partial
 
 from PyQt5 import QtGui, QtWidgets, QtCore
 from artiq.applets.simple import SimpleApplet
@@ -14,43 +13,69 @@ from artiq.master.worker_impl import ExamineDeviceMgr, ExamineDatasetMgr, TraceA
 from jax import JaxApplet
 
 
+class StatusUpdater:
+    """Stores and updates the status of the experiment explorer.
+
+    Modified from artiq.dashboard.explorer.StatusUpdater.
+    """
+    def __init__(self, init):
+        self.status = init
+        self.explorer = None
+
+    def set_explorer(self, explorer):
+        self.explorer = explorer
+        self.explorer.update_scanning(self.status["scanning"])
+
+    def __setitem__(self, k, v):
+        self.status[k] = v
+        if self.explorer is not None:
+            if k == "scanning":
+                self.explorer.update_scanning(v)
+
+
 class Explorer(QtWidgets.QWidget, JaxApplet):
+    """TODO: priority, pipeline_name, log_level, docstrings."""
     def __init__(self, args, **kwds):
         super().__init__(**kwds)
         self.setDisabled(True)
 
         self._disconnected_reported = False
-        self._explist_sub = ModelSubscriber("explist", explorer.Model)
-        self._explist_status_sub = ModelSubscriber("explist_status", explorer.StatusUpdater)
+        asyncio.get_event_loop().run_until_complete(
+            self.connect_subscribers()
+        )
 
         self.initialize_gui()
         self.connect_to_labrad(args.ip)
-        asyncio.run_coroutine_threadsafe(
-            self.start_subscribers(),
-            asyncio.get_event_loop()
-        )
 
-    async def start_subscribers(self):
+    async def connect_subscribers(self):
+        localhost = "::1"
         port_notify = 3250
-        await self._explist_sub.connect("::1", port_notify)
-        await self._explist_status_sub.connect("::1", port_notify)
+        self._explist_sub = ModelSubscriber("explist", explorer.Model, self._report_disconnect)
+        await self._explist_sub.connect(localhost, port_notify)
+        self._explist_status_sub = ModelSubscriber(
+            "explist_status", StatusUpdater, self._report_disconnect
+        )
+        await self._explist_status_sub.connect(localhost, port_notify)
 
     def initialize_gui(self):
+        font = QtGui.QFont()
         layout = QtWidgets.QGridLayout()
         self.stack = QtWidgets.QStackedWidget()
         layout.addWidget(self.stack, 0, 0)
         self.explorer = QtWidgets.QTreeView()
         self.explorer.setHeaderHidden(True)
         self.explorer.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        self.explorer.setFont(font)
         self.stack.addWidget(self.explorer)
 
         submit = QtWidgets.QPushButton("Submit")
         submit.setIcon(
             QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DialogOkButton)
         )
+        submit.setFont(font)
         submit.setToolTip("Schedule the selected experiment")
         layout.addWidget(submit, 1, 0)
-        submit.clicked.connect(partial(self.expname_action, "submit"))
+        submit.clicked.connect(self.submit)
 
         self.explist_model = explorer.Model(dict())
         self._explist_sub.add_setmodel_callback(self.set_model)
@@ -81,6 +106,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 
     async def artiq_connected(self):
         self.artiq = self.cxn.get_server("artiq")
+        self.repo_path = await self.artiq.get_repository_path()
         device_db = await self.artiq.get_device_db()
         self.device_db = pickle.loads(device_db)
         ExamineDeviceMgr.get_device_db = lambda: self.device_db
@@ -106,6 +132,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
             await self.artiq.scan_device_db()
             device_db = await self.artiq.get_device_db()
             self.device_db = pickle.loads(device_db)
+            ExamineDeviceMgr.get_device_db = lambda: self.device_db
 
         self.run_in_labrad_loop(worker)()
 
@@ -122,48 +149,59 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 
     def _resolve_expurl(self, expurl):
         expinfo = self.explist_model.backing_store[expurl]
-        return (expinfo["file"], expinfo["class_name"])
+        return expinfo
 
     async def _submit_experiment(self, expurl):
-        """TODO: Handle experiment parameters, priority, pipeline, and log_level correctly."""
-        file, class_name = self._resolve_expurl(expurl)
-        await self.artiq.schedule_experiment_with_parameters(file, class_name)
+        expinfo = self._resolve_expurl(expurl)
+        file = expinfo["file"]
+        class_name = expinfo["class_name"]
+        priority = expinfo["scheduler_defaults"].get("priority", 0)
+        pipeline = expinfo["scheduler_defaults"].get("pipeline_name", "main")
+        required_params = self._get_experiment_parameters(
+            os.path.join(self.repo_path, file), class_name
+        )
+        parameter_override_list = []
+        log_level = 20
+        await self.artiq.schedule_experiment_with_parameters(
+            file,
+            class_name,
+            required_params,
+            parameter_override_list,
+            priority,
+            pipeline,
+            log_level,
+        )
 
-    def expname_action(self, action):
+    def submit(self):
         expname = self._get_selected_expname()
         if expname is not None:
-            if action == "submit":
-                self.run_in_labrad_loop(self._submit_experiment)(expname)
+            self.run_in_labrad_loop(self._submit_experiment)(expname)
 
     def update_scanning(self, scanning):
-        """TODO: This is not working."""
         if scanning:
             self.stack.setCurrentWidget(self.waiting_panel)
             self.waiting_panel.start()
         else:
-            self.stack.setCurrentWidget(self.el_buttons)
+            self.stack.setCurrentWidget(self.explorer)
             self.waiting_panel.stop()
 
-    def update_cur_rev(self, cur_rev):
-        """This function is not implemented.
-
-        We do not show the current revision of the repository in the GUI
-        as we do not use the git backend of the artiq experiment manager.
-        This function is for compatibility with `artiq.dashboard.explorer.StatusUpdater`.
-        """
-        pass
-
-    def get_experiment_parameters(self, file, class_name):
+    def _get_experiment_parameters(self, file, class_name):
         module_name = os.path.basename(file).split(".")[0]
+        file = os.path.join("C:\\Users\\scientist\\code\\spock", file)
         spec = importlib.util.spec_from_file_location(module_name, file)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         cls = getattr(module, class_name)
-        exp = cls(ExamineDeviceMgr, ExamineDatasetMgr, TraceArgumentManager(), {})
-        return exp.parameter_paths
+        exp = cls((ExamineDeviceMgr, ExamineDatasetMgr, TraceArgumentManager(), {}))
+        try:
+            parameter_paths = exp.parameter_paths
+        except AttributeError as e:
+            parameter_paths = []  # allows experiments without parameter_paths to run.
+        return parameter_paths
 
 
 def main():
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     applet = SimpleApplet(Explorer)
     Explorer.add_labrad_ip_argument(applet)
     applet.run()
