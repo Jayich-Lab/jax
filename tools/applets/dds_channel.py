@@ -89,7 +89,7 @@ class DDSDetail(DialogOnTop):
     def initialize_gui(self):
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
-        labelfont = QtGui.QFont("Arial", 7)
+        labelfont = QtGui.QFont("Arial", 8)
         spinboxfont = QtGui.QFont("Arial", 10)
 
         label = QtWidgets.QLabel(f"CPLD: {self.dds_parameters.cpld}")
@@ -130,7 +130,7 @@ class DDSChannel(QtWidgets.QGroupBox):
 
     def initialize_gui(self):
         titlefont = QtGui.QFont("Arial", 10)
-        labelfont = QtGui.QFont("Arial", 7)
+        labelfont = QtGui.QFont("Arial", 8)
         buttonfont = QtGui.QFont("Arial", 10)
         spinboxfont = QtGui.QFont("Arial", 10)
 
