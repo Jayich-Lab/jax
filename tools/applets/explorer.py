@@ -3,15 +3,19 @@ import importlib.util
 import logging
 import os
 import pickle
+from tkinter import FALSE
 
-from PyQt5 import QtGui, QtWidgets, QtCore
 from artiq.applets.simple import SimpleApplet
 from artiq.dashboard import explorer
 from artiq.gui.models import ModelSubscriber
-from artiq.master.worker_impl import ExamineDeviceMgr, ExamineDatasetMgr, TraceArgumentManager
-
+from artiq.master.worker_impl import (
+    ExamineDatasetMgr,
+    ExamineDeviceMgr,
+    TraceArgumentManager,
+)
 from jax import JaxApplet
 from jax.util.ui.dialog_on_top import DialogOnTop
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class StatusUpdater:
@@ -19,6 +23,7 @@ class StatusUpdater:
 
     Modified from artiq.dashboard.explorer.StatusUpdater.
     """
+
     def __init__(self, init):
         self.status = init
         self.explorer = None
@@ -36,6 +41,7 @@ class StatusUpdater:
 
 class ExperimentDetails(DialogOnTop):
     """A dialog showing details of an experiment."""
+
     def __init__(self, expurl, parent):
         super().__init__(parent)
         self.expurl = expurl
@@ -48,7 +54,9 @@ class ExperimentDetails(DialogOnTop):
         self.setLayout(grid)
 
         label_priority = QtWidgets.QLabel("Priority")
-        label_priority.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        label_priority.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+        )
         grid.addWidget(label_priority, 0, 0)
 
         self.spinbox_priority = QtWidgets.QSpinBox()
@@ -59,31 +67,43 @@ class ExperimentDetails(DialogOnTop):
         grid.addWidget(self.spinbox_priority, 0, 1)
 
         label_pipeline = QtWidgets.QLabel("Pipeline")
-        label_pipeline.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        label_pipeline.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+        )
         grid.addWidget(label_pipeline, 1, 0)
-    
+
         self.textbox_pipeline = QtWidgets.QLineEdit()
-        default_pipeline = self._expinfo["scheduler_defaults"].get("pipeline_name", "main")
+        default_pipeline = self._expinfo["scheduler_defaults"].get(
+            "pipeline_name", "main"
+        )
         self.textbox_pipeline.setText(default_pipeline)
         grid.addWidget(self.textbox_pipeline, 1, 1)
 
         label_log_level = QtWidgets.QLabel("Log level")
-        label_log_level.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        label_log_level.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+        )
         grid.addWidget(label_log_level, 2, 0)
 
         self.combobox_log_level = QtWidgets.QComboBox()
-        self.combobox_log_level.addItems(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+        self.combobox_log_level.addItems(
+            ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        )
         self.combobox_log_level.setCurrentIndex(1)
         grid.addWidget(self.combobox_log_level, 2, 1)
 
         self.checkbox_preload = QtWidgets.QCheckBox("Preload parameters when scheduled")
         self.checkbox_preload.setChecked(True)
-        self.checkbox_preload.setToolTip("Uses the parameters when the experiment is scheduled.")
+        self.checkbox_preload.setToolTip(
+            "Uses the parameters when the experiment is scheduled."
+        )
         grid.addWidget(self.checkbox_preload, 3, 0, 1, 2)
 
         submit = QtWidgets.QPushButton("Submit")
         submit.setIcon(
-            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DialogOkButton)
+            QtWidgets.QApplication.style().standardIcon(
+                QtWidgets.QStyle.SP_DialogOkButton
+            )
         )
         submit.clicked.connect(self.submit_clicked)
         submit.setToolTip("Schedule the selected experiment")
@@ -95,12 +115,12 @@ class ExperimentDetails(DialogOnTop):
             self.spinbox_priority.value(),
             self.textbox_pipeline.text(),
             getattr(logging, self.combobox_log_level.currentText()),
-            self.expurl
+            self.expurl,
         )
         self.close()
 
 
-class Explorer(QtWidgets.QWidget, JaxApplet):
+class Explorer(QtWidgets.QDockWidget, JaxApplet):
     """Experiment explorer.
 
     Modified from artiq.dashboard.explorer.ExplorerDock.
@@ -109,16 +129,18 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
     relevant parameters for the experiment chosen.
     This applet needs to be restarted when the ARTIQ master restarts.
     """
+
     # subscribe to this method to update when an experiment is selected / deselected.
     # TODO: add a blank experiment to show all parameters.
     parameters_updated = QtCore.pyqtSignal(object)
 
     def __init__(self, args, **kwds):
         super().__init__(**kwds)
+        self.setObjectName("Explorer")
         self.setDisabled(True)
         self.initialize_gui()
 
-        self._disconnect_reported = False
+        self._disconnect_reported = FALSE
         asyncio.get_event_loop().run_until_complete(
             self.connect_subscribers()  # run in the main thread asyncio loop.
         )
@@ -126,9 +148,12 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         self.connect_to_labrad("::1")
 
     def initialize_gui(self):
+        widget = QtWidgets.QWidget()
         layout = QtWidgets.QGridLayout()
 
-        self.stack = QtWidgets.QStackedWidget()  # either shows the explorer or the waiting panel.
+        self.stack = (
+            QtWidgets.QStackedWidget()
+        )  # either shows the explorer or the waiting panel.
         layout.addWidget(self.stack, 0, 0)
 
         self.explorer = QtWidgets.QTreeView()
@@ -138,7 +163,9 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 
         submit = QtWidgets.QPushButton("Submit")
         submit.setIcon(
-            QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DialogOkButton)
+            QtWidgets.QApplication.style().standardIcon(
+                QtWidgets.QStyle.SP_DialogOkButton
+            )
         )
         submit.setToolTip("Schedule the selected experiment")
         layout.addWidget(submit, 1, 0)
@@ -152,7 +179,8 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         self.repo_path = None
         self._parameters_initialized = True
         self._experiment_parameters = {}
-        self.setLayout(layout)
+        widget.setLayout(layout)
+        self.setWidget(widget)
 
     def _create_context_menu(self):
         self.explorer.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
@@ -181,7 +209,9 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         """
         localhost = "::1"
         port_notify = 3250
-        self._explist_sub = ModelSubscriber("explist", explorer.Model, self._report_disconnect)
+        self._explist_sub = ModelSubscriber(
+            "explist", explorer.Model, self._report_disconnect
+        )
         await self._explist_sub.connect(localhost, port_notify)
         self._explist_status_sub = ModelSubscriber(
             "explist_status", StatusUpdater, self._report_disconnect
@@ -278,7 +308,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         preload_parameters=True,
         priority=None,
         pipeline=None,
-        log_level=None
+        log_level=None,
     ):
         expinfo = self._resolve_expurl(expurl)
         file = expinfo["file"]
@@ -298,7 +328,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         else:
             required_params = []
         parameter_override_list = []  # TODO: implement parameter scanning / overriding.
-        
+
         await self.artiq.schedule_experiment_with_parameters(
             file,
             class_name,
@@ -315,7 +345,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
         priority=None,
         pipeline=None,
         log_level=None,
-        expurl=None
+        expurl=None,
     ):
         if expurl is None:
             expurl = self._get_selected_expurl()
@@ -325,7 +355,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
                 preload_parameters=preload_parameters,
                 priority=priority,
                 pipeline=pipeline,
-                log_level=log_level
+                log_level=log_level,
             )
 
     def update_scanning(self, scanning):
@@ -394,6 +424,7 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         """Closes subscribers when the applet is closed."""
+
         async def close_subscribers():
             try:
                 await self._explist_sub.close()
@@ -403,10 +434,15 @@ class Explorer(QtWidgets.QWidget, JaxApplet):
                 await self._explist_status_sub.close()
             except Exception as e:
                 pass
-        asyncio.run_coroutine_threadsafe(
-            close_subscribers(), asyncio.get_event_loop()
-        )
+
+        asyncio.run_coroutine_threadsafe(close_subscribers(), asyncio.get_event_loop())
         return super().closeEvent(a0)
+
+    def save_state(self):
+        return {}
+
+    def restore_state(self, state):
+        pass
 
 
 def main():
@@ -417,5 +453,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

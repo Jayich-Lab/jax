@@ -5,18 +5,16 @@ import os
 import pickle
 from functools import partial
 
-from PyQt5 import QtGui, QtWidgets, QtCore
 from artiq.applets.simple import SimpleApplet
 from artiq.dashboard import schedule
 from artiq.gui.models import ModelSubscriber
-
 from jax import JaxApplet
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 logger = logging.getLogger(__name__)
 
 
-class Schedule(QtWidgets.QWidget, JaxApplet):
+class Schedule(QtWidgets.QDockWidget, JaxApplet):
     """Shows scheduled experiments.
 
     Modified from artiq.dashboard.schedule.ScheduleDock.
@@ -27,8 +25,10 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
 
     It also adds context menu options to run the initialization and the background experiments.
     """
+
     def __init__(self, args, **kwds):
         super().__init__(**kwds)
+        self.setObjectName("Schedule")
         self.setDisabled(True)
 
         self._disconnect_reported = False
@@ -40,18 +40,15 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
         self.connect_to_labrad("::1")  # only works on localhost.
 
     def initialize_gui(self):
-        layout = QtWidgets.QGridLayout()
-        layout.setHorizontalSpacing(0)
-        layout.setVerticalSpacing(0)
         self.table = QtWidgets.QTableView()
         self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.table.verticalHeader().setSectionResizeMode(
-            QtWidgets.QHeaderView.ResizeToContents)
+            QtWidgets.QHeaderView.ResizeToContents
+        )
         self.table.verticalHeader().hide()
         self.table.horizontalHeader().setSectionsMovable(True)
-        layout.addWidget(self.table)
-        self.setLayout(layout)
+        self.setWidget(self.table)
 
         self._create_context_menu()
 
@@ -60,18 +57,20 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
 
         cw = QtGui.QFontMetrics(self.font()).averageCharWidth()
         h = self.table.horizontalHeader()
-        h.resizeSection(0, 7*cw)
-        h.resizeSection(1, 12*cw)
-        h.resizeSection(2, 16*cw)
-        h.resizeSection(3, 6*cw)
-        h.resizeSection(4, 16*cw)
-        h.resizeSection(5, 30*cw)
-        h.resizeSection(6, 20*cw)
-        h.resizeSection(7, 20*cw)
+        h.resizeSection(0, 7 * cw)
+        h.resizeSection(1, 12 * cw)
+        h.resizeSection(2, 16 * cw)
+        h.resizeSection(3, 6 * cw)
+        h.resizeSection(4, 16 * cw)
+        h.resizeSection(5, 30 * cw)
+        h.resizeSection(6, 20 * cw)
+        h.resizeSection(7, 20 * cw)
 
     def _create_context_menu(self):
         self.table.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
-        request_termination_action = QtWidgets.QAction("Request termination", self.table)
+        request_termination_action = QtWidgets.QAction(
+            "Request termination", self.table
+        )
         request_termination_action.triggered.connect(partial(self.delete_clicked, True))
         request_termination_action.setShortcut("DELETE")
         request_termination_action.setShortcutContext(QtCore.Qt.WidgetShortcut)
@@ -84,7 +83,8 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
         self.table.addAction(delete_action)
 
         terminate_pipeline = QtWidgets.QAction(
-            "Gracefully terminate all in pipeline", self.table)
+            "Gracefully terminate all in pipeline", self.table
+        )
         terminate_pipeline.triggered.connect(self.terminate_pipeline_clicked)
         self.table.addAction(terminate_pipeline)
 
@@ -99,7 +99,9 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
     async def connect_subscribers(self):
         localhost = "::1"
         port_notify = 3250
-        self._schedule_sub = ModelSubscriber("schedule", schedule.Model, self._report_disconnect)
+        self._schedule_sub = ModelSubscriber(
+            "schedule", schedule.Model, self._report_disconnect
+        )
         await self._schedule_sub.connect(localhost, port_notify)
 
     def _report_disconnect(self):
@@ -158,8 +160,9 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
             except:
                 # May happen if the experiment has terminated by itself
                 # while we were terminating others.
-                logger.warning("failed to request termination of RID %d",
-                             rid, exc_info=True)
+                logger.warning(
+                    "failed to request termination of RID %d", rid, exc_info=True
+                )
 
     def terminate_pipeline_clicked(self):
         idx = self.table.selectedIndexes()
@@ -167,8 +170,10 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
             row = idx[0].row()
             selected_rid = self.table_model.row_to_key[row]
             pipeline = self.table_model.backing_store[selected_rid]["pipeline"]
-            logger.info("Requesting termination of all "
-                "experiments in pipeline '%s'", pipeline)
+            logger.info(
+                "Requesting termination of all " "experiments in pipeline '%s'",
+                pipeline,
+            )
 
             rids = set()
             for rid, info in self.table_model.backing_store.items():
@@ -188,6 +193,12 @@ class Schedule(QtWidgets.QWidget, JaxApplet):
 
         self.run_in_labrad_loop(worker)()
 
+    def save_state(self):
+        return bytes(self.table.horizontalHeader().saveState())
+
+    def restore_state(self, state):
+        self.table.horizontalHeader().restoreState(QtCore.QByteArray(state))
+
 
 def main():
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -197,5 +208,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
