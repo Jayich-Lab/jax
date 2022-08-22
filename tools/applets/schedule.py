@@ -157,7 +157,7 @@ class Schedule(QtWidgets.QDockWidget, JaxApplet):
         for rid in rids:
             try:
                 await self.artiq.request_terminate_experiment(rid)
-            except:
+            except Exception as e:
                 # May happen if the experiment has terminated by itself
                 # while we were terminating others.
                 logger.warning(
