@@ -1,10 +1,10 @@
-import threading
 import pickle
+import threading
+
 import numpy as _np
 from artiq.experiment import *
-from jax.util.parameter_group import ParameterGroup
 from jax.util.drift_tracker import DriftTracker
-
+from jax.util.parameter_group import ParameterGroup
 
 __all__ = ["JaxEnvironment"]
 
@@ -33,6 +33,7 @@ class JaxEnvironment(HasEnvironment):
 
     def _connect_labrad(self):
         import labrad
+
         self.cxn = labrad.connect()
         try:
             self.dv = self.cxn.vault
@@ -161,8 +162,9 @@ class JaxEnvironment(HasEnvironment):
         return self.dv.add_dataset(name, value, group_path, shared)
 
     @rpc
-    def add_streaming_dataset(self, name, value, maxshape, rows_stream=1, group_path="/datasets",
-                              shared=False) -> TStr:
+    def add_streaming_dataset(
+        self, name, value, maxshape, rows_stream=1, group_path="/datasets", shared=False
+    ) -> TStr:
         """Adds a streaming dataset that is automatically saved into the file.
 
         Args:
@@ -178,8 +180,9 @@ class JaxEnvironment(HasEnvironment):
         """
         if not self._is_dataset_open:
             self.open_file()
-        return self.dv.add_streaming_dataset(name, value, maxshape, rows_stream,
-                                             group_path, shared)
+        return self.dv.add_streaming_dataset(
+            name, value, maxshape, rows_stream, group_path, shared
+        )
 
     @rpc(flags={"async"})
     def set_dataset(self, dataset_path, value):
@@ -284,8 +287,9 @@ class JaxEnvironment(HasEnvironment):
         Also saves all parameters to the data file.
         """
         from jax.util.labrad import remove_labrad_units
+
         pb = self.cxn.parameter_bank
-        params_serialized, params_full_serialized = pb.get_frozen_parameters(self.scheduler.rid)
+        params_serialized, params_full_serialized = pb.get_cached_parameters(self.scheduler.rid)
         params = pickle.loads(params_serialized)
         params_full = pickle.loads(params_full_serialized)
         for collection, name in self.parameter_paths:
