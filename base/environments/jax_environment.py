@@ -284,12 +284,21 @@ class JaxEnvironment(HasEnvironment):
     def save_parameters(self):
         """Loads all parameters into self.p.
 
+        The function first tries to load cached parameters from the parameter bank. The cached
+        parameters are either preloaded or overridden when the experiment is scheduled.
+        Then it loads parameters not saved as cached parameters in the experiment.
+
         Also saves all parameters to the data file.
+        The experiment parameter values are saved under the "parameters" key of the data file.
+        The full form of the experiment parameters (including the parameter type, range, etc.)
+        are saved under the "parameter_full" key of the data file.
         """
         from jax.util.labrad import remove_labrad_units
 
         pb = self.cxn.parameter_bank
-        params_serialized, params_full_serialized = pb.get_cached_parameters(self.scheduler.rid)
+        params_serialized, params_full_serialized = pb.get_cached_parameters(
+            self.scheduler.rid
+        )
         params = pickle.loads(params_serialized)
         params_full = pickle.loads(params_full_serialized)
         for collection, name in self.parameter_paths:
