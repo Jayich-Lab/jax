@@ -37,9 +37,18 @@ class Devices:
     Args:
         device_db: device_db dict from device_db.py.
     """
+
     kernel_invariants = {
-        "urukuls", "ad9910s", "ttl_ins", "ttl_outs", "ttl_in_outs",
-        "urukuls_used", "ad9910s_used", "ttl_ins_used", "ttl_outs_used", "ttl_in_outs_used"
+        "urukuls",
+        "ad9910s",
+        "ttl_ins",
+        "ttl_outs",
+        "ttl_in_outs",
+        "urukuls_used",
+        "ad9910s_used",
+        "ttl_ins_used",
+        "ttl_outs_used",
+        "ttl_in_outs_used",
     }
 
     def __init__(self, device_db):
@@ -53,24 +62,26 @@ class Devices:
             device, device object.
         """
         if key in self.urukuls:
-            if device not in self.urukuls_used:
+            if (key, device) not in self.urukuls_used:
                 self.urukuls_used.append((key, device))
         if key in self.ad9910s:
-            if device not in self.ad9910s_used:
+            if (key, device) not in self.ad9910s_used:
                 self.ad9910s_used.append((key, device))
         if key in self.ttl_ins:
-            if device not in self.ttl_ins_used:
+            if (key, device) not in self.ttl_ins_used:
                 self.ttl_ins_used.append((key, device))
         if key in self.ttl_outs:
-            if device not in self.ttl_outs_used:
+            if (key, device) not in self.ttl_outs_used:
                 self.ttl_outs_used.append((key, device))
         if key in self.ttl_in_outs:
-            if device not in self.ttl_in_outs_used:
+            if (key, device) not in self.ttl_in_outs_used:
                 self.ttl_in_outs_used.append((key, device))
 
     def _parse_device_db(self, device_db):
         self.urukuls = []
-        self._urukul_io_updates = []  # We don't want to manually control these TTL outputs.
+        self._urukul_io_updates = (
+            []
+        )  # We don't want to manually control these TTL outputs.
         self.ad9910s = []
         self._ad9910_sws = []  # We don't want to manually control these TTL outputs.
         self.ttl_ins = []
@@ -87,9 +98,14 @@ class Devices:
             if "class" not in device_db[kk]:
                 continue
             urukul_module = "artiq.coredevice.urukul"
-            if device_db[kk]["class"] == "CPLD" and device_db[kk]["module"] == urukul_module:
+            if (
+                device_db[kk]["class"] == "CPLD"
+                and device_db[kk]["module"] == urukul_module
+            ):
                 self.urukuls.append(kk)
-                self._urukul_io_updates.append(device_db[kk]["arguments"]["io_update_device"])
+                self._urukul_io_updates.append(
+                    device_db[kk]["arguments"]["io_update_device"]
+                )
             if device_db[kk]["class"] == "AD9910":
                 self.ad9910s.append(kk)
                 self._ad9910_sws.append(device_db[kk]["arguments"]["sw_device"])
