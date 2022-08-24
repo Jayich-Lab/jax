@@ -1,6 +1,6 @@
-from PyQt5 import QtWidgets, QtCore, QtGui
 from artiq.applets.simple import SimpleApplet
 from jax import JaxApplet
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class PMT(QtWidgets.QWidget, JaxApplet):
@@ -36,23 +36,26 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         mode_label = QtWidgets.QLabel("Mode:")
         mode_label.setAlignment(QtCore.Qt.AlignBottom)
         mode_label.setFont(QtGui.QFont(shell_font, pointSize=12))
-        mode_label.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                 QtWidgets.QSizePolicy.Maximum)
+        mode_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
         layout.addWidget(mode_label, 1, 0)
 
         self.mode_combobox = QtWidgets.QComboBox()
         self.mode_combobox.addItem(self._normal_mode_text)
         self.mode_combobox.addItem(self._differential_mode_text)
         self.mode_combobox.setFont(QtGui.QFont(shell_font, pointSize=12))
-        self.mode_combobox.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                         QtWidgets.QSizePolicy.Maximum)
+        self.mode_combobox.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
         layout.addWidget(self.mode_combobox, 2, 0)
 
         interval_label = QtWidgets.QLabel("Interval:")
         interval_label.setAlignment(QtCore.Qt.AlignBottom)
         interval_label.setFont(QtGui.QFont(shell_font, pointSize=12))
-        interval_label.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                     QtWidgets.QSizePolicy.Maximum)
+        interval_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
         layout.addWidget(interval_label, 3, 0)
 
         self.interval_spinbox = QtWidgets.QDoubleSpinBox()
@@ -60,14 +63,16 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         self.interval_spinbox.setSingleStep(0.1)
         self.interval_spinbox.setDecimals(2)
         self.interval_spinbox.setFont(QtGui.QFont(shell_font, pointSize=12))
-        self.interval_spinbox.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                            QtWidgets.QSizePolicy.Maximum)
+        self.interval_spinbox.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
         layout.addWidget(self.interval_spinbox, 4, 0)
 
         self.start_button = QtWidgets.QPushButton("Start")
         self.start_button.setFont(QtGui.QFont(shell_font, pointSize=12))
-        self.start_button.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                        QtWidgets.QSizePolicy.Maximum)
+        self.start_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum
+        )
         self.start_button.setCheckable(True)
         layout.addWidget(self.start_button, 5, 0)
         self.setLayout(layout)
@@ -84,7 +89,9 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         await self.dv.subscribe_to_shared_dataset(self._pmt_counts_dataset)
         SHARED_DATA_CHANGE = 128936
         await self.dv.on_shared_data_change(SHARED_DATA_CHANGE)
-        self.dv.addListener(listener=self._data_change, source=None, ID=SHARED_DATA_CHANGE)
+        self.dv.addListener(
+            listener=self._data_change, source=None, ID=SHARED_DATA_CHANGE
+        )
         self.set_disable_state()
 
     async def pmt_connected(self):
@@ -104,16 +111,24 @@ class PMT(QtWidgets.QWidget, JaxApplet):
         self.pmt.addListener(listener=self._new_pmt_mode, source=None, ID=NEW_MODE)
         NEW_INTERVAL = 128938
         await self.pmt.on_new_interval(NEW_INTERVAL)
-        self.pmt.addListener(listener=self._new_pmt_interval, source=None, ID=NEW_INTERVAL)
+        self.pmt.addListener(
+            listener=self._new_pmt_interval, source=None, ID=NEW_INTERVAL
+        )
         FILE_HALF_FULL = 128939
         await self.pmt.on_file_half_full(FILE_HALF_FULL)
-        self.pmt.addListener(listener=self._file_half_full, source=None, ID=FILE_HALF_FULL)
+        self.pmt.addListener(
+            listener=self._file_half_full, source=None, ID=FILE_HALF_FULL
+        )
         AUTO_NEW_FILE = 128940
         await self.pmt.on_auto_new_file(AUTO_NEW_FILE)
-        self.pmt.addListener(listener=self._auto_new_file, source=None, ID=AUTO_NEW_FILE)
+        self.pmt.addListener(
+            listener=self._auto_new_file, source=None, ID=AUTO_NEW_FILE
+        )
         START_STOP = 128941
         await self.pmt.on_start_and_stop(START_STOP)
-        self.pmt.addListener(listener=self._on_start_and_stop, source=None, ID=START_STOP)
+        self.pmt.addListener(
+            listener=self._on_start_and_stop, source=None, ID=START_STOP
+        )
         self.set_disable_state()
 
     async def setup_cxn_listeners(self):
