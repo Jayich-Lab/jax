@@ -1,9 +1,10 @@
-from PyQt5 import QtWidgets, QtGui, QtCore
 from jax.util.ui.dialog_on_top import DialogOnTop
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class DDSParameters:
     """Stores DDS parameters and calls the artiq server when changes are made."""
+
     def __init__(self, parent, channel, cpld, amplitude, att, frequency, phase, state):
         self.parent = parent
         self.channel = channel
@@ -61,9 +62,9 @@ class DDSParameters:
     def set_state(self, value, update=True):
         if value != self._state and update:
             if value:
-                value_set = 1.
+                value_set = 1.0
             else:
-                value_set = -1.
+                value_set = -1.0
             command = (self.channel, "state", value_set)
             self._change_dds(command)
         self._state = value
@@ -77,6 +78,7 @@ class DDSParameters:
 
 class DDSDetail(DialogOnTop):
     """A dialog showing details for a channel."""
+
     def __init__(self, dds_parameters, parent=None):
         self.dds_parameters = dds_parameters
         super().__init__(parent)
@@ -87,25 +89,23 @@ class DDSDetail(DialogOnTop):
     def initialize_gui(self):
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
-        labelfont = QtGui.QFont('Arial', 10)
-        spinboxfont = QtGui.QFont('Arial', 15)
+        labelfont = QtGui.QFont("Arial", 8)
+        spinboxfont = QtGui.QFont("Arial", 10)
 
         label = QtWidgets.QLabel(f"CPLD: {self.dds_parameters.cpld}")
-        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                            QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         label.setFont(labelfont)
         grid.addWidget(label, 0, 0)
 
         label = QtWidgets.QLabel("Att (dB)")
-        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                            QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         label.setFont(labelfont)
         grid.addWidget(label, 1, 0)
 
         self.att_box = QtWidgets.QDoubleSpinBox()
         self.att_box.setDecimals(1)
         self.att_box.setMinimum(-31.5)
-        self.att_box.setMaximum(0.)
+        self.att_box.setMaximum(0.0)
         self.att_box.setSingleStep(0.5)
         self.att_box.setFont(spinboxfont)
         self.att_box.setKeyboardTracking(False)
@@ -121,6 +121,7 @@ class DDSDetail(DialogOnTop):
 
 class DDSChannel(QtWidgets.QGroupBox):
     """GUI for a DDS channel."""
+
     def __init__(self, dds_parameters, parent=None):
         self.dds_parameters = dds_parameters
         super().__init__(parent)
@@ -128,32 +129,30 @@ class DDSChannel(QtWidgets.QGroupBox):
         self.setup_gui_listeners()
 
     def initialize_gui(self):
-        titlefont = QtGui.QFont('Arial', 16)
-        labelfont = QtGui.QFont('Arial', 10)
-        buttonfont = QtGui.QFont('Arial', 15)
-        spinboxfont = QtGui.QFont('Arial', 15)
+        titlefont = QtGui.QFont("Arial", 10)
+        labelfont = QtGui.QFont("Arial", 8)
+        buttonfont = QtGui.QFont("Arial", 10)
+        spinboxfont = QtGui.QFont("Arial", 10)
 
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                           QtWidgets.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         label = QtWidgets.QLabel(self.dds_parameters.channel)
-        label.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                            QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         label.setAlignment(QtCore.Qt.AlignHCenter)
         label.setFont(titlefont)
         grid.addWidget(label, 0, 0, 1, 3)
 
         label = QtWidgets.QLabel("Frequency (MHz)")
-        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                            QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         label.setFont(labelfont)
         grid.addWidget(label, 1, 0)
 
         label = QtWidgets.QLabel("Amplitude")
-        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                            QtWidgets.QSizePolicy.Fixed)
+        label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         label.setFont(labelfont)
         grid.addWidget(label, 1, 1)
 
@@ -164,7 +163,7 @@ class DDSChannel(QtWidgets.QGroupBox):
         self.freq_box.setSingleStep(0.1)
         self.freq_box.setFont(spinboxfont)
         self.freq_box.setKeyboardTracking(False)
-        MHz_to_Hz = 1.e6
+        MHz_to_Hz = 1.0e6
         self.freq_box.setValue(self.dds_parameters.frequency / MHz_to_Hz)
         grid.addWidget(self.freq_box, 2, 0)
 
@@ -174,16 +173,18 @@ class DDSChannel(QtWidgets.QGroupBox):
         self.amp_box.setMaximum(1.0)
         self.amp_box.setSingleStep(0.01)
         self.amp_box.setFont(spinboxfont)
-        self.amp_box.setSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                   QtWidgets.QSizePolicy.Preferred)
+        self.amp_box.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         self.amp_box.setKeyboardTracking(False)
         self.amp_box.setValue(self.dds_parameters.amplitude)
         grid.addWidget(self.amp_box, 2, 1)
 
         self.switch_button = QtWidgets.QPushButton("o")
         self.switch_button.setFont(buttonfont)
-        self.switch_button.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
-                                         QtWidgets.QSizePolicy.Fixed)
+        self.switch_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+        )
         self.switch_button.setCheckable(True)
         if self.dds_parameters.state:
             self.switch_button.setChecked(self.dds_parameters.state)
@@ -196,7 +197,7 @@ class DDSChannel(QtWidgets.QGroupBox):
         self.switch_button.clicked.connect(self.on_widget_switch_changed)
 
     def on_widget_freq_changed(self, val):
-        MHz_to_Hz = 1.e6
+        MHz_to_Hz = 1.0e6
         self.dds_parameters.set_frequency(val * MHz_to_Hz)
 
     def on_widget_amp_changed(self, val):
@@ -207,7 +208,7 @@ class DDSChannel(QtWidgets.QGroupBox):
         self.set_switch_button_text(checked)
 
     def on_monitor_freq_changed(self, val):
-        MHz_to_Hz = 1.e6
+        MHz_to_Hz = 1.0e6
         self.freq_box.blockSignals(True)
         self.freq_box.setValue(val / MHz_to_Hz)
         self.freq_box.blockSignals(False)

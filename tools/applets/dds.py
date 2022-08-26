@@ -1,13 +1,14 @@
-import time
 import pickle
-from PyQt5 import QtGui, QtWidgets, QtCore
+import time
+
 from artiq.applets.simple import SimpleApplet
 from jax import JaxApplet
 from jax.tools.applets.dds_channel import DDSChannel, DDSParameters
 from jax.util.ui.custom_list_widget import CustomListWidget
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class DDS(QtWidgets.QWidget, JaxApplet):
+class DDS(QtWidgets.QDockWidget, JaxApplet):
     # signal emitted after getting DDS parameters.
     # a signal is needed to run self.initialize_channels on the default thread.
     # widgets can only be created in the default thread.
@@ -15,7 +16,10 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
     def __init__(self, args, **kwds):
         super().__init__(**kwds)
-        self.setDisabled(True)  # start with the applet disabled, until artiq server is connected.
+        self.setObjectName("DDS")
+        self.setDisabled(
+            True
+        )  # start with the applet disabled, until artiq server is connected.
         self.do_initialize.connect(self.initialize_channels)
 
         self.initialize_gui()
@@ -24,11 +28,8 @@ class DDS(QtWidgets.QWidget, JaxApplet):
         self.connect_to_labrad(args.ip)
 
     def initialize_gui(self):
-        font = QtGui.QFont("Arial", 15)
-        layout = QtWidgets.QGridLayout()
         self.list_widget = CustomListWidget()
-        layout.addWidget(self.list_widget)
-        self.setLayout(layout)
+        self.setWidget(self.list_widget)
 
     async def labrad_connected(self):
         """Called when LabRAD is connected."""
@@ -45,7 +46,9 @@ class DDS(QtWidgets.QWidget, JaxApplet):
         await self.artiq.on_dds_change(SIGNALID)
         self.artiq.addListener(listener=self._dds_changed, source=None, ID=SIGNALID)
         await self.artiq.on_dds_initialize(SIGNALID + 1)
-        self.artiq.addListener(listener=self._dds_initialized, source=None, ID=SIGNALID+1)
+        self.artiq.addListener(
+            listener=self._dds_initialized, source=None, ID=SIGNALID + 1
+        )
 
     async def get_dds_parameters(self):
         self.params = await self.artiq.get_dds_parameters()
@@ -64,8 +67,10 @@ class DDS(QtWidgets.QWidget, JaxApplet):
             phase = self.params[channel][1]
             amp = self.params[channel][2]
             att = self.params[channel][3]
-            state = (self.params[channel][4] > 0)
-            channel_param = DDSParameters(self, channel, cpld, amp, att, frequency, phase, state)
+            state = self.params[channel][4] > 0
+            channel_param = DDSParameters(
+                self, channel, cpld, amp, att, frequency, phase, state
+            )
             channel_widget = DDSChannel(channel_param, self)
             self.channels[channel] = channel_widget
             self._still_looping = False
@@ -74,9 +79,12 @@ class DDS(QtWidgets.QWidget, JaxApplet):
 
         if "list_widget" not in self.config:
             self.config["list_widget"] = {}
-        self.list_widget_reordered(self.list_widget.set_visibility_and_order(
-            self.config["list_widget"]))
-        self.list_widget.visibility_and_order_changed.connect(self.list_widget_reordered)
+        self.list_widget_reordered(
+            self.list_widget.set_visibility_and_order(self.config["list_widget"])
+        )
+        self.list_widget.visibility_and_order_changed.connect(
+            self.list_widget_reordered
+        )
 
     def list_widget_reordered(self, widget_config):
         self.config["list_widget"] = widget_config
@@ -98,7 +106,7 @@ class DDS(QtWidgets.QWidget, JaxApplet):
         elif attribute == "attenuation":
             self.channels[channel].on_monitor_att_changed(val)
         elif attribute == "state":
-            self.channels[channel].on_monitor_switch_changed(val > 0.)
+            self.channels[channel].on_monitor_switch_changed(val > 0.0)
 
     def _dds_initialized(self, signal, value):
         self.run_in_labrad_loop(self.get_dds_parameters)()
@@ -112,4 +120,5 @@ def main():
 
 
 if __name__ == "__main__":
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     main()
