@@ -1,8 +1,4 @@
 import asyncio
-import importlib.util
-import logging
-import os
-import pickle
 from functools import partial
 
 from artiq.applets.simple import SimpleApplet
@@ -10,8 +6,6 @@ from artiq.dashboard import schedule
 from artiq.gui.models import ModelSubscriber
 from jax import JaxApplet
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-logger = logging.getLogger(__name__)
 
 
 class Schedule(QtWidgets.QDockWidget, JaxApplet):
@@ -106,7 +100,7 @@ class Schedule(QtWidgets.QDockWidget, JaxApplet):
 
     def _report_disconnect(self):
         if not self._disconnected_reported:
-            logging.error("connection to master lost, restart dashboard to reconnect")
+            print("connection to master lost, restart dashboard to reconnect")
             self.setDisabled(True)
         self._disconnect_reported = True
 
@@ -147,9 +141,9 @@ class Schedule(QtWidgets.QDockWidget, JaxApplet):
             row = idx[0].row()
             rid = self.table_model.row_to_key[row]
             if graceful:
-                logger.info("Requested termination of RID %d", rid)
+                print(f"Requested termination of RID {rid}", )
             else:
-                logger.info("Deleted RID %d", rid)
+                print(f"Deleted RID {rid}")
             self.run_in_labrad_loop(self.delete)(rid, graceful)
 
     async def request_term_multiple(self, rids):
@@ -160,8 +154,8 @@ class Schedule(QtWidgets.QDockWidget, JaxApplet):
             except Exception as e:
                 # May happen if the experiment has terminated by itself
                 # while we were terminating others.
-                logger.warning(
-                    "failed to request termination of RID %d", rid, exc_info=True
+                print(
+                    "failed to request termination of RID {rid}"
                 )
 
     def terminate_pipeline_clicked(self):
@@ -170,9 +164,8 @@ class Schedule(QtWidgets.QDockWidget, JaxApplet):
             row = idx[0].row()
             selected_rid = self.table_model.row_to_key[row]
             pipeline = self.table_model.backing_store[selected_rid]["pipeline"]
-            logger.info(
-                "Requesting termination of all " "experiments in pipeline '%s'",
-                pipeline,
+            print(
+                "Requesting termination of all " "experiments in pipeline '{pipeline}'"
             )
 
             rids = set()
