@@ -329,7 +329,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             required_params = []
         parameter_override_list = []  # TODO: implement parameter scanning / overriding.
 
-        await self.artiq.schedule_experiment_with_parameters(
+        rid = await self.artiq.schedule_experiment_with_parameters(
             file,
             class_name,
             required_params,
@@ -338,6 +338,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             pipeline,
             log_level,
         )
+        logging.info(f"Experiment {class_name} of rid {rid} is scheduled")
 
     def submit(
         self,
