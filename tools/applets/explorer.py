@@ -3,16 +3,12 @@ import importlib.util
 import logging
 import os
 import pickle
-from tkinter import FALSE
 
 from artiq.applets.simple import SimpleApplet
 from artiq.dashboard import explorer
 from artiq.gui.models import ModelSubscriber
-from artiq.master.worker_impl import (
-    ExamineDatasetMgr,
-    ExamineDeviceMgr,
-    TraceArgumentManager,
-)
+from artiq.master.worker_impl import (ExamineDatasetMgr, ExamineDeviceMgr,
+                                      TraceArgumentManager)
 from jax import JaxApplet
 from jax.util.ui.dialog_on_top import DialogOnTop
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -140,7 +136,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         self.setDisabled(True)
         self.initialize_gui()
 
-        self._disconnect_reported = FALSE
+        self._disconnect_reported = False
         asyncio.get_event_loop().run_until_complete(
             self.connect_subscribers()  # run in the main thread asyncio loop.
         )
@@ -236,7 +232,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         and ARTIQ event loops. This can be implemented easier with rockdove.
         """
         if not self._disconnect_reported:
-            logging.error("connection to master lost, restart dashboard to reconnect")
+            print("connection to master lost, restart dashboard to reconnect")
             self.setDisabled(True)
         self._disconnect_reported = True
 
@@ -329,7 +325,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             required_params = []
         parameter_override_list = []  # TODO: implement parameter scanning / overriding.
 
-        await self.artiq.schedule_experiment_with_parameters(
+        rid = await self.artiq.schedule_experiment_with_parameters(
             file,
             class_name,
             required_params,
@@ -338,6 +334,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             pipeline,
             log_level,
         )
+        print(f"{class_name} of RID {rid} is scheduled")
 
     def submit(
         self,
