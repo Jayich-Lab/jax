@@ -1,13 +1,13 @@
 import time as _t
 import pickle as _p
 from artiq.experiment import *
-from jax import JaxExperiment, SinaraEnvironment
+from jax import InfiniteLoop, SinaraEnvironment
 
 
 __all__ = ["IDLE"]
 
 
-class IDLE(JaxExperiment, SinaraEnvironment):
+class IDLE(InfiniteLoop, SinaraEnvironment):
     """Base class for a background running experiment that reads PMT and sets TTL/DDS parameters.
 
     Inherit this class in the experiment repository and define the class variables:
@@ -41,15 +41,11 @@ class IDLE(JaxExperiment, SinaraEnvironment):
         super().prepare()
         self._get_repump_aom_states()
 
-    def run(self):
-        """Keeps running until the experiment is stopped by the user."""
-        while True:
-            should_stop = self.check_stop_or_do_pause()
-            if should_stop:
-                self.disconnect_labrad()
-                break
-            else:
-                self.run_kernel()
+    def host_startup(self):
+        pass
+
+    def host_cleanup(self):
+        self.disconnect_labrad()
 
     @host_only
     def _get_all_dds_and_ttl_objects(self):
@@ -72,51 +68,45 @@ class IDLE(JaxExperiment, SinaraEnvironment):
             self.repump_aom_states.append(dds_params[kk][-1])
 
     @kernel
-    def run_kernel(self):
-        """Infinite loop of acquiring PMT counts and updating DDSes and TTLs.
-
-        It checks for DDS and TTL changes at least once per loop, and it may check for more times
-        if it has enough time.
-        The loop ends if a higher priority experiment is scheduled or if the user requests stop.
-        """
+    def kernel_before_loops(self):
         self.core.reset()
         self.core.break_realtime()
-        while True:
-            if self.scheduler.check_pause():
-                break
+
+    @kernel
+    def kernel_loop(self, loop_index: TInt64):
+        self.update_hardware()
+        differential_mode, interval_mu = self.get_pmt_mode_and_interval()
+        if interval_mu == 0:  # if the PMT server is not connected.
+            return
+        self.core.break_realtime()
+
+        if differential_mode:
+            for kk in range(len(self.repump_aoms)):
+                # if the repump AOM is off, don't turn on and off the AOM.
+                # the repump AOM stays off for both differential high and low counting periods.
+                if self.repump_aom_states[kk] > 0.:
+                    self.repump_aoms[kk].sw.off()
+            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
+
+            at_mu(t_count + self.rtio_cycle_mu)
+            for kk in range(len(self.repump_aoms)):
+                if self.repump_aom_states[kk] > 0.:
+                    self.repump_aoms[kk].sw.on()
+            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
+        else:
+            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
+
+        twenty_ms_mu = 20 * ms  # 20 ms time slack to prevent slowing down PMT acquisition.
+        while t_count > now_mu() + twenty_ms_mu:
             self.update_hardware()
-            differential_mode, interval_mu = self.get_pmt_mode_and_interval()
-            if interval_mu == 0:  # if the PMT server is not connected.
-                continue
-            self.core.break_realtime()
 
-            if differential_mode:
-                for kk in range(len(self.repump_aoms)):
-                    # if the repump AOM is off, don't turn on and off the AOM.
-                    # the repump AOM stays off for both differential high and low counting periods.
-                    if self.repump_aom_states[kk] > 0.:
-                        self.repump_aoms[kk].sw.off()
-                t_count = self.pmt_counter.gate_rising_mu(interval_mu)
-
-                at_mu(t_count + self.rtio_cycle_mu)
-                for kk in range(len(self.repump_aoms)):
-                    if self.repump_aom_states[kk] > 0.:
-                        self.repump_aoms[kk].sw.on()
-                t_count = self.pmt_counter.gate_rising_mu(interval_mu)
-            else:
-                t_count = self.pmt_counter.gate_rising_mu(interval_mu)
-
-            twenty_ms_mu = 20*ms  # 20 ms time slack to prevent slowing down PMT acquisition.
-            while t_count > now_mu() + twenty_ms_mu:
-                self.update_hardware()
-
-            if differential_mode:
-                count_low = self.pmt_counter.fetch_count()
-                count_high = self.pmt_counter.fetch_count()
-            else:
-                count_low = 0
-                count_high = self.pmt_counter.fetch_count()
-            self.save_counts(count_high, count_low)
+        if differential_mode:
+            count_low = self.pmt_counter.fetch_count()
+            count_high = self.pmt_counter.fetch_count()
+        else:
+            count_low = 0
+            count_high = self.pmt_counter.fetch_count()
+        self.save_counts(count_high, count_low)
 
     @kernel(flags={"fast-math"})
     def update_hardware(self):
