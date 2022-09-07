@@ -1,6 +1,6 @@
+import numpy as _np
 from artiq.experiment import TInt64, kernel
 from jax import JaxExperiment
-
 
 __all__ = ["InfiniteLoop"]
 
@@ -49,7 +49,7 @@ class InfiniteLoop(JaxExperiment):
     @kernel
     def kernel_run(self):
         self.kernel_before_loops()
-        loop_index: TInt64 = 0
+        loop_index = _np.int64(0)
         while True:
             if self.scheduler.check_pause():
                 break

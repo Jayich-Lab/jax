@@ -1,7 +1,5 @@
-import numpy as _np
-from artiq.experiment import TInt64, kernel
+from artiq.experiment import TInt32, kernel
 from jax import JaxExperiment
-
 
 __all__ = ["Scan"]
 
@@ -27,6 +25,7 @@ class Scan(JaxExperiment):
 
     Use RPCs to call host functions during the kernel execution if needed.
     """
+
     CHECK_STOP = True
 
     def run(self):
@@ -59,7 +58,7 @@ class Scan(JaxExperiment):
     @kernel
     def kernel_run(self):
         self.kernel_before_loops()
-        for kk in _np.int64(range(len(self.scanned_values))):
+        for kk in range(len(self.scanned_values)):
             if kk < self._scans_finished:
                 continue  # skips scanned points after pausing the experiment.
             if self.CHECK_STOP:
@@ -76,7 +75,7 @@ class Scan(JaxExperiment):
         self.core.reset()
 
     @kernel
-    def kernel_loop(self, loop_index: TInt64):
+    def kernel_loop(self, loop_index: TInt32):
         """Called during each loop of self.kernel_run(). Can be overriden."""
         pass
 
