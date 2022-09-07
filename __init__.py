@@ -4,4 +4,5 @@ from jax.base.environments.jax_environment import JaxEnvironment
 from jax.base.environments.sinara_environment import SinaraEnvironment
 from jax.base.experiments.jax_experiment import JaxExperiment
 from jax.base.experiments.scan import Scan
+from jax.base.experiments.infinite_loop import InfiniteLoop
 from jax.base.sequences.sequence import Sequence
