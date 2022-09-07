@@ -1,4 +1,5 @@
-from artiq.experiment import *
+import numpy as _np
+from artiq.experiment import TInt64, kernel
 from jax import JaxExperiment
 
 
@@ -32,8 +33,9 @@ class Scan(JaxExperiment):
         try:
             self.host_startup()
             while self._scans_finished < len(self.scanned_values):
-                should_stop = self.check_stop_or_do_pause()
-                if should_stop:
+                # blocks if a higher priority experiment takes control.
+                if self.check_stop_or_do_pause():
+                    # if termination is requested.
                     break
                 else:
                     self.turn_off_all_ddses()
@@ -57,7 +59,7 @@ class Scan(JaxExperiment):
     @kernel
     def kernel_run(self):
         self.kernel_before_loops()
-        for kk in range(len(self.scanned_values)):
+        for kk in _np.int64(range(len(self.scanned_values))):
             if kk < self._scans_finished:
                 continue  # skips scanned points after pausing the experiment.
             if self.CHECK_STOP:
@@ -74,7 +76,7 @@ class Scan(JaxExperiment):
         self.core.reset()
 
     @kernel
-    def kernel_loop(self, loop_index):
+    def kernel_loop(self, loop_index: TInt64):
         """Called during each loop of self.kernel_run(). Can be overriden."""
         pass
 
