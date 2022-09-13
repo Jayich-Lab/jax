@@ -1,8 +1,8 @@
-import time as _t
 import pickle as _p
+import time as _t
+
 from artiq.experiment import *
 from jax import InfiniteLoop, SinaraEnvironment
-
 
 __all__ = ["IDLE"]
 
@@ -17,11 +17,11 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
     This experiment assumes that the device has at least one AD9910 DDS and at least one TTL board.
     """
+    DIFFERENTIAL_TRIGGER = None
     REPUMP_AOM_CHANNELS = None
-    PMT_EDGECOUNTER = None
     kernel_invariants = {
-        "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms", "pmt_counter", "ad9910s",
-        "ttl_outs"
+        "DIFFERENTIAL_TRIGGER", "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms", "pmt_counter",
+        "ad9910s", "ttl_outs"
     }
 
     def build(self):
@@ -29,12 +29,12 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         lowest_priority = -100  # we use priorities range from -100 to 100.
         self.set_default_scheduling(priority=lowest_priority, pipeline_name="main")
 
+        if self.DIFFERENTIAL_TRIGGER is None:
+            raise Exception("DIFFERENTIAL_TRIGGER must be defined.")
+        self.differential_trigger = self.get_device(self.DIFFERENTIAL_TRIGGER)
         if self.REPUMP_AOM_CHANNELS is None:
             raise Exception("REPUMP_AOM_CHANNELS must be defined.")
         self.repump_aoms = [self.get_device(kk) for kk in self.REPUMP_AOM_CHANNELS]
-        if self.PMT_EDGECOUNTER is None:
-            raise Exception("PMT_EDGECOUNTER must be defined.")
-        self.pmt_counter = self.get_device(self.PMT_EDGECOUNTER)
         self._get_all_dds_and_ttl_objects()
 
     def prepare(self):
@@ -85,28 +85,14 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
                 # if the repump AOM is off, don't turn on and off the AOM.
                 # the repump AOM stays off for both differential high and low counting periods.
                 if self.repump_aom_states[kk] > 0.:
-                    self.repump_aoms[kk].sw.off()
-            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
-
-            at_mu(t_count + self.rtio_cycle_mu)
-            for kk in range(len(self.repump_aoms)):
-                if self.repump_aom_states[kk] > 0.:
-                    self.repump_aoms[kk].sw.on()
-            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
-        else:
-            t_count = self.pmt_counter.gate_rising_mu(interval_mu)
+                    if self.differential_trigger.gate_rising_mu(interval_mu):
+                        self.repump_aoms[kk].sw.off()
+                    elif self.differential_trigger.gate_falling_mu(interval_mu):
+                        self.repump_aoms[kk].sw.on()
 
         twenty_ms_mu = 20 * ms  # 20 ms time slack to prevent slowing down PMT acquisition.
         while t_count > now_mu() + twenty_ms_mu:
             self.update_hardware()
-
-        if differential_mode:
-            count_low = self.pmt_counter.fetch_count()
-            count_high = self.pmt_counter.fetch_count()
-        else:
-            count_low = 0
-            count_high = self.pmt_counter.fetch_count()
-        self.save_counts(count_high, count_low)
 
     @kernel(flags={"fast-math"})
     def update_hardware(self):
