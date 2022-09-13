@@ -29,7 +29,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         lowest_priority = -100  # we use priorities range from -100 to 100.
         self.set_default_scheduling(priority=lowest_priority, pipeline_name="main")
         
-        self.check_high_pulse = True
+        self.rising_pulse = True
         if self.DIFFERENTIAL_TRIGGER is None:
             raise Exception("DIFFERENTIAL_TRIGGER must be defined.")
         self.differential_trigger = self.get_device(self.DIFFERENTIAL_TRIGGER)
@@ -78,15 +78,41 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self.update_hardware()
         self.core.break_realtime()
 
-        for kk in range(len(self.repump_aoms)):
-            # if the repump AOM is off, don't turn on and off the AOM.
-            # the repump AOM stays off for both differential high and low counting periods.
+        max_wait_time_mu = self.get_max_cycle()
+        total_trigger_wait_time_mu = 0
+        trigger_time = -1
+        trigger_cycle_mu = self.exp.core.seconds_to_mu(50 * us) # we will go through the whole time in 50 us intervals
 
-            if self.repump_aom_states[kk] > 0.:
-                if self.differential_trigger.gate_rising_mu():
-                    self.repump_aoms[kk].sw.off()
-                elif self.differential_trigger.gate_falling_mu():
-                    self.repump_aoms[kk].sw.on()
+        self.differential_trigger.count(now_mu())  # clears all existing timestamps.
+
+        if self.rising_pulse == True:
+            self._gate_func = self.differential_trigger.gate_rising_mu
+        else: 
+            self._gate_func = self._trigger_ttl.gate_falling_mu
+
+        self._gate_func(trigger_cycle_mu)  # waits for a trigger for trigger_cycle_mu.
+        total_trigger_wait_time_mu += trigger_cycle_mu
+
+        while (total_trigger_wait_time_mu < max_wait_time_mu - trigger_cycle_mu):
+            # wait for a trigger in the cycle
+            gate_end_time_mu = self._gate_func(trigger_cycle_mu)
+            total_trigger_wait_time_mu += trigger_cycle_mu
+
+            # check for a trigger
+            trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu - trigger_cycle_mu)
+            if trigger_time > 0:
+                break
+        
+        # takes care of the last section of time
+        if trigger_time < 0:
+            gate_end_time_mu = self._gate_func(max_wait_time_mu - total_trigger_wait_time_mu)
+            trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu)
+
+        if trigger_time > 0: # if trigger is detected at some point
+            self.switch_repump_aom_states(self.rising_pulse)
+
+            # switch to the next pulse
+            self.rising_pulse = not self.rising_pulse
 
     @kernel(flags={"fast-math"})
     def update_hardware(self):
@@ -194,10 +220,31 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             device.off()
         self.core.break_realtime()
 
-    @rpc(flags={"async"})
-    def save_counts(self, high: TInt32, low: TInt32 = 0):
-        """Sends counts to the PMT server."""
+    @rpc
+    def switch_repump_aom_states(self, turn_off):
+        for kk in range(len(self.repump_aoms)):
+            # if the repump AOM is off, don't turn on and off the AOM.
+            # the repump AOM stays off for both differential high and low counting periods.
+
+            if self.repump_aom_states[kk] > 0.:
+                if turn_off:
+                    self.repump_aoms[kk].sw.off()
+                else:
+                    self.repump_aoms[kk].sw.on()
+
+    @rpc
+    def get_max_cycle(self):
+        """Gets PMT counting interval.
+        
+        This is the max wait time for differential mode. If PMT is not on,
+        this defaults to 0."""
         try:
-            self.cxn.pmt.save_counts(_t.time(), high / self.interval_ms, low / self.interval_ms)
+            interval = self.cxn.pmt_arduino.get_interval()
+            self.interval_ms = interval / ms
+            interval_mu = self.core.seconds_to_mu(interval)
+            if not self.cxn.pmt_arduino.is_running():
+                interval_mu = 0
+            return interval_mu
         except Exception as e:
             pass
+        return 0
