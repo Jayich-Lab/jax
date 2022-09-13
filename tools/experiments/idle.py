@@ -20,7 +20,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     DIFFERENTIAL_TRIGGER = None
     REPUMP_AOM_CHANNELS = None
     kernel_invariants = {
-        "DIFFERENTIAL_TRIGGER", "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms", 
+        "DIFFERENTIAL_TRIGGER", "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms",
         "pmt_counter", "ad9910s", "ttl_outs"
     }
 
@@ -102,7 +102,9 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             total_trigger_wait_time_mu += trigger_cycle_mu
 
             # check for a trigger
-            trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu - trigger_cycle_mu)
+            trigger_time = self.differential_trigger.timestamp_mu(
+                gate_end_time_mu - trigger_cycle_mu
+                )
             if trigger_time > 0:
                 break
 
