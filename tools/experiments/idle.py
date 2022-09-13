@@ -28,7 +28,8 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         super().build()
         lowest_priority = -100  # we use priorities range from -100 to 100.
         self.set_default_scheduling(priority=lowest_priority, pipeline_name="main")
-
+        
+        self.check_high_pulse = True
         if self.DIFFERENTIAL_TRIGGER is None:
             raise Exception("DIFFERENTIAL_TRIGGER must be defined.")
         self.differential_trigger = self.get_device(self.DIFFERENTIAL_TRIGGER)
@@ -80,6 +81,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         for kk in range(len(self.repump_aoms)):
             # if the repump AOM is off, don't turn on and off the AOM.
             # the repump AOM stays off for both differential high and low counting periods.
+
             if self.repump_aom_states[kk] > 0.:
                 if self.differential_trigger.gate_rising_mu():
                     self.repump_aoms[kk].sw.off()
