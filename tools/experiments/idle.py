@@ -75,24 +75,16 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     @kernel
     def kernel_loop(self, loop_index: TInt64):
         self.update_hardware()
-        differential_mode, interval_mu = self.get_pmt_mode_and_interval()
-        if interval_mu == 0:  # if the PMT server is not connected.
-            return
         self.core.break_realtime()
 
-        if differential_mode:
-            for kk in range(len(self.repump_aoms)):
-                # if the repump AOM is off, don't turn on and off the AOM.
-                # the repump AOM stays off for both differential high and low counting periods.
-                if self.repump_aom_states[kk] > 0.:
-                    if self.differential_trigger.gate_rising_mu(interval_mu):
-                        self.repump_aoms[kk].sw.off()
-                    elif self.differential_trigger.gate_falling_mu(interval_mu):
-                        self.repump_aoms[kk].sw.on()
-
-        twenty_ms_mu = 20 * ms  # 20 ms time slack to prevent slowing down PMT acquisition.
-        while t_count > now_mu() + twenty_ms_mu:
-            self.update_hardware()
+        for kk in range(len(self.repump_aoms)):
+            # if the repump AOM is off, don't turn on and off the AOM.
+            # the repump AOM stays off for both differential high and low counting periods.
+            if self.repump_aom_states[kk] > 0.:
+                if self.differential_trigger.gate_rising_mu():
+                    self.repump_aoms[kk].sw.off()
+                elif self.differential_trigger.gate_falling_mu():
+                    self.repump_aoms[kk].sw.on()
 
     @kernel(flags={"fast-math"})
     def update_hardware(self):
@@ -199,21 +191,6 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         else:
             device.off()
         self.core.break_realtime()
-
-    @rpc
-    def get_pmt_mode_and_interval(self) -> TTuple([TBool, TInt64]):
-        """Gets PMT differential mode and counting interval."""
-        try:
-            is_differential = self.cxn.pmt.is_differential_mode()
-            interval = self.cxn.pmt.get_interval()
-            self.interval_ms = interval / ms
-            interval_mu = self.core.seconds_to_mu(interval)
-            if not self.cxn.pmt.is_running():
-                interval_mu = 0
-            return (is_differential, interval_mu)
-        except Exception as e:
-            pass
-        return (False, 0)
 
     @rpc(flags={"async"})
     def save_counts(self, high: TInt32, low: TInt32 = 0):
