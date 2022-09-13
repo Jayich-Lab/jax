@@ -104,7 +104,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             # check for a trigger
             trigger_time = self.differential_trigger.timestamp_mu(
                 gate_end_time_mu - trigger_cycle_mu
-                )
+            )
             if trigger_time > 0:
                 break
 
