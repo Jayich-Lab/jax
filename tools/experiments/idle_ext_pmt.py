@@ -8,7 +8,7 @@ __all__ = ["IDLE"]
 
 
 class IDLE(InfiniteLoop, SinaraEnvironment):
-    """Base class for background experiment that reads PMT and sets TTL/DDS parameters through an arduino board.
+    """Base class for background experiment to read PMT and set TTL/DDS parameters from an Arduino.
 
     Inherit this class in the experiment repository and define the class variables:
         REPUMP_AOM_CHANNELS: list of strs, names of DDSes controlling repump lasers.
