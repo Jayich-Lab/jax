@@ -252,7 +252,6 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         ExamineDeviceMgr.get_device_db = lambda: self.device_db
         self.repo_path = await self.artiq.get_repository_path()
 
-        await self.artiq.scan_experiment_repository(True)
         if not self._parameters_initialized:
             self._get_all_experiment_parameters()
             self._parameters_initialized = True
@@ -308,7 +307,7 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         log_level=None,
     ):
         expinfo = self._resolve_expurl(expurl)
-        file = expinfo["file"]
+        filename = expinfo["file"]
         class_name = expinfo["class_name"]
         if priority is None:
             priority = expinfo["scheduler_defaults"].get("priority", 0)
@@ -321,13 +320,13 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             # If the experiment is changed after last repository scan, the parameters
             # may have been changed and the cache saved in `self._experiment_parameters`
             # should not be used.
-            required_params = self._get_experiment_parameters(file, class_name)
+            required_params = self._get_experiment_parameters(filename, class_name)
         else:
             required_params = []
         parameter_override_list = []  # TODO: implement parameter scanning / overriding.
 
         rid = await self.artiq.schedule_experiment_with_parameters(
-            file,
+            filename,
             class_name,
             required_params,
             parameter_override_list,
@@ -386,20 +385,23 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         self._experiment_parameters = {}
         for expurl in self.explist_model.backing_store:
             expinfo = self._resolve_expurl(expurl)
-            file = expinfo["file"]
+            filename = expinfo["file"]
             class_name = expinfo["class_name"]
-            self._experiment_parameters[expurl] = self._get_experiment_parameters(
-                file, class_name
-            )
+            try:
+                self._experiment_parameters[expurl] = self._get_experiment_parameters(
+                    filename, class_name
+                )
+            except Exception:
+                print(f"Cannot load the parameters in {class_name} of {filename}.")
 
-    def _get_experiment_parameters(self, file, class_name):
+    def _get_experiment_parameters(self, filename, class_name):
         """Creates the experiment class and tries to get the required parameters of the experiment.
 
         It imports the experiment module, builds the class, and tries to read the `parameter_paths`
         attribute of the experiment.
 
         Args:
-            file: str, file path from the repository root.
+            filename: str, file path from the repository root.
             class_name: str, name of the experiment class.
 
         Returns:
@@ -407,9 +409,9 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
             (collection_name, parameter_name). If the experiment does not have required parmeters,
             it returns an empty list.
         """
-        module_name = os.path.basename(file).split(".")[0]
-        file = os.path.join(self.repo_path, file)
-        spec = importlib.util.spec_from_file_location(module_name, file)
+        module_name = os.path.basename(filename).split(".")[0]
+        filename = os.path.join(self.repo_path, filename)
+        spec = importlib.util.spec_from_file_location(module_name, filename)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         cls = getattr(module, class_name)
