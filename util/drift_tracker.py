@@ -62,7 +62,7 @@ class DriftTracker:
         self.uB_over_h = _c.physical_constants["Bohr magneton"][0] / _c.h
 
     @kernel(flags={"fast-math"})
-    def sync_time(self, time_now: TFloat, mu: TFloat=1e-9):
+    def sync_time(self, time_now: TFloat, mu: TFloat = 1e-9):
         """Syncs wall clock time with core device time.
 
         Must be called if self.get_frequency_kernel or self.get_Zeeman_frequency_kernel are used.
