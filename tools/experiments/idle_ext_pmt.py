@@ -89,10 +89,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
             self.differential_trigger.count(now_mu())  # clears all existing timestamps.
 
-            if self.rising_pulse:
-                self._gate_func = self.differential_trigger.gate_rising_mu
-            else:
-                self._gate_func = self.differential_trigger.gate_falling_mu
+            self.get_gate_trigger()
 
             # waits for a trigger for trigger_cycle_mu.
             self._gate_func(trigger_cycle_mu)
@@ -256,3 +253,10 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         except Exception as e:
             pass
         return (False, 0)
+    
+    @rpc
+    def get_gate_trigger(self):
+        if self.rising_pulse:
+                self._gate_func = self.differential_trigger.gate_rising_mu
+        else:
+            self._gate_func = self.differential_trigger.gate_falling_mu
