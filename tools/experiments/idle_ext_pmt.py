@@ -8,7 +8,7 @@ __all__ = ["IDLE"]
 
 
 class IDLE(InfiniteLoop, SinaraEnvironment):
-    """Base class for a background running experiment that reads PMT and sets TTL/DDS parameters.
+    """Base class for background experiment that reads PMT and sets TTL/DDS parameters through an arduino board.
 
     Inherit this class in the experiment repository and define the class variables:
         REPUMP_AOM_CHANNELS: list of strs, names of DDSes controlling repump lasers.
@@ -43,6 +43,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self._get_repump_aom_states()
 
     def host_startup(self):
+        self.trigger_cycle = self.exp.core.seconds_to_mu(50 * us)
         pass
 
     def host_cleanup(self):
@@ -78,46 +79,47 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self.update_hardware()
         self.core.break_realtime()
 
-        max_wait_time_mu = self.get_max_cycle()
+        diff_mode, max_wait_time_mu = self.get_max_differential_mode_trigger_time()
         total_trigger_wait_time_mu = 0
         trigger_time = -1
 
-        # we will go through the whole time in 50 us intervals
-        trigger_cycle_mu = self.exp.core.seconds_to_mu(50 * us)
+        if diff_mode:
+            # we will go through the whole time in 50 us intervals
+            trigger_cycle_mu = self.trigger_cycle
 
-        self.differential_trigger.count(now_mu())  # clears all existing timestamps.
+            self.differential_trigger.count(now_mu())  # clears all existing timestamps.
 
-        if self.rising_pulse:
-            self._gate_func = self.differential_trigger.gate_rising_mu
-        else:
-            self._gate_func = self._trigger_ttl.gate_falling_mu
+            if self.rising_pulse:
+                self._gate_func = self.differential_trigger.gate_rising_mu
+            else:
+                self._gate_func = self.differential_trigger.gate_falling_mu
 
-        # waits for a trigger for trigger_cycle_mu.
-        self._gate_func(trigger_cycle_mu)
-        total_trigger_wait_time_mu += trigger_cycle_mu
-
-        while (total_trigger_wait_time_mu < max_wait_time_mu - trigger_cycle_mu):
-            # wait for a trigger in the cycle
-            gate_end_time_mu = self._gate_func(trigger_cycle_mu)
+            # waits for a trigger for trigger_cycle_mu.
+            self._gate_func(trigger_cycle_mu)
             total_trigger_wait_time_mu += trigger_cycle_mu
 
-            # check for a trigger
-            trigger_time = self.differential_trigger.timestamp_mu(
-                gate_end_time_mu - trigger_cycle_mu
-            )
-            if trigger_time > 0:
-                break
+            while (total_trigger_wait_time_mu < max_wait_time_mu - trigger_cycle_mu):
+                # wait for a trigger in the cycle
+                gate_end_time_mu = self._gate_func(trigger_cycle_mu)
+                total_trigger_wait_time_mu += trigger_cycle_mu
 
-        # takes care of the last section of time
-        if trigger_time < 0:
-            gate_end_time_mu = self._gate_func(max_wait_time_mu - total_trigger_wait_time_mu)
-            trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu)
+                # check for a trigger
+                trigger_time = self.differential_trigger.timestamp_mu(
+                    gate_end_time_mu - trigger_cycle_mu
+                )
+                if trigger_time > 0:
+                    break
 
-        if trigger_time > 0:  # if trigger is detected at some point
-            self.switch_repump_aom_states(self.rising_pulse)
+            # takes care of the last section of time
+            if trigger_time < 0:
+                gate_end_time_mu = self._gate_func(max_wait_time_mu - total_trigger_wait_time_mu)
+                trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu)
 
-            # switch to the next pulse
-            self.rising_pulse = not self.rising_pulse
+            if trigger_time > 0:  # if trigger is detected at some point
+                self.switch_repump_aom_states(self.rising_pulse)
+
+                # switch to the next pulse
+                self.rising_pulse = not self.rising_pulse
 
     @kernel(flags={"fast-math"})
     def update_hardware(self):
@@ -225,7 +227,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             device.off()
         self.core.break_realtime()
 
-    @rpc
+    @kernel
     def switch_repump_aom_states(self, turn_off):
         for kk in range(len(self.repump_aoms)):
             # if the repump AOM is off, don't turn on and off the AOM.
@@ -238,18 +240,19 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
                     self.repump_aoms[kk].sw.on()
 
     @rpc
-    def get_max_cycle(self):
+    def get_max_differential_mode_trigger_time(self) -> TTuple([TBool, TInt64]):
         """Gets PMT counting interval.
 
         This is the max wait time for differential mode. If PMT is not on,
-        this defaults to 0."""
+        this defaults to 0.
+        """
         try:
-            interval = self.cxn.pmt_arduino.get_interval()
-            self.interval_ms = interval / ms
+            interval = self.cxn.pmt_arduino.get_interval() * 2
             interval_mu = self.core.seconds_to_mu(interval)
+            diff_mode = self.cxn.pmt_arduino.is_differential_mode()
             if not self.cxn.pmt_arduino.is_running():
                 interval_mu = 0
-            return interval_mu
+            return (diff_mode, interval_mu)
         except Exception as e:
             pass
-        return 0
+        return (False, 0)
