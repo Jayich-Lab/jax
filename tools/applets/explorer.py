@@ -252,7 +252,6 @@ class Explorer(QtWidgets.QDockWidget, JaxApplet):
         ExamineDeviceMgr.get_device_db = lambda: self.device_db
         self.repo_path = await self.artiq.get_repository_path()
 
-        await self.artiq.scan_experiment_repository(True)
         if not self._parameters_initialized:
             self._get_all_experiment_parameters()
             self._parameters_initialized = True
