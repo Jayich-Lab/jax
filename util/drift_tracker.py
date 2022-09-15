@@ -62,28 +62,19 @@ class DriftTracker:
         self.uB_over_h = _c.physical_constants["Bohr magneton"][0] / _c.h
 
     @kernel(flags={"fast-math"})
-    def seconds_to_mu(self, time_seconds: TFloat):
-        """TODO: move this function of the module, or eliminate the magic number 1e-9 here."""
-        return _np.int64(time_seconds // 1e-9)
-
-    @kernel(flags={"fast-math"})
-    def mu_to_seconds(self, time_mu: TInt64):
-        """TODO: move this function of the module, or eliminate the magic number 1e-9 here."""
-        return time_mu * 1e-9
-
-    @kernel(flags={"fast-math"})
-    def sync_time(self, time_now):
+    def sync_time(self, time_now: TFloat, mu: TFloat=1e-9):
         """Syncs wall clock time with core device time.
 
         Must be called if self.get_frequency_kernel or self.get_Zeeman_frequency_kernel are used.
 
         Args:
             time_now: float, epoch time now.
+            mu: float, machine unit of time in s. Default 1e-9 (1 ns).
         """
         time_after_calibration = time_now - self.last_calibration
-        self._last_calibration_mu = now_mu() - self.seconds_to_mu(time_after_calibration)
+        self._last_calibration_mu = now_mu() - _np.int64(time_after_calibration / mu)
         # time is converted to machine units, frequency is still in Hz.
-        self._center_drift_rate_mu = self.center_drift_rate * self.mu_to_seconds(1)
+        self._center_drift_rate_mu = self.center_drift_rate * mu
 
     @host_only
     def get_frequency_host(self, detuning):
