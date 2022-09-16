@@ -42,6 +42,21 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         super().prepare()
         self._get_repump_aom_states()
 
+    def run(self):
+        try:
+            self.host_startup()
+            while True:
+                # blocks if a higher priority experiment takes control.
+                if self.check_stop_or_do_pause():
+                    # if termination is requested.
+                    break
+                else:
+                    self.kernel_run()
+        except Exception as e:
+            raise e
+        finally:
+            self.host_cleanup()
+
     def host_startup(self):
         self.trigger_cycle = self.exp.core.seconds_to_mu(50 * us)
         pass
