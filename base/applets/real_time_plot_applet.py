@@ -25,6 +25,7 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         ylabel: str, y-axis label. Default "".
         scrolling: bool, whether the viewport scrolls with new data. Default True.
         ip: str, vault server IP address to connect to.
+        ylog: bool, determined whether the y axis will be plotting logarithmically
     """
 
     set_data = QtCore.pyqtSignal(str, _np.ndarray)
