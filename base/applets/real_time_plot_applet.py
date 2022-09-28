@@ -39,13 +39,13 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         ylabel="",
         scrolling=True,
         ip="127.0.0.1",
-        ylog_bool=False,
+        ylog=False,
         **kwds,
     ):
         super().__init__(**kwds)
         self.num_of_traces = num_of_traces
         self.dataset_names = dataset_names
-        self.ylog_bool = ylog_bool
+        self.ylog = ylog
         self.scrolling = scrolling
         self._control_pressed = False
         self.setDisabled(True)
@@ -81,7 +81,7 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         x.setLabel(xlabel, **label_style)
         x.setStyle(tickFont=font, tickTextOffset=tick_text_offset)
 
-        if self.ylog_bool:
+        if self.ylog:
             self.plot_widget.plotItem.setLogMode(y=True)
         y = self.plot_widget.plotItem.getAxis("left")
         y.setLabel(ylabel, **label_style)
