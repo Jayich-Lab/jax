@@ -64,7 +64,8 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
             self.host_cleanup()
 
     def host_startup(self):
-        self.trigger_cycle = self.exp.core.seconds_to_mu(50 * us)
+        self.get_gate_trigger()
+        self.trigger_cycle = self.core.seconds_to_mu(50 * us)
         pass
 
     def host_cleanup(self):
@@ -109,8 +110,6 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
             trigger_cycle_mu = self.trigger_cycle
 
             self.differential_trigger.count(now_mu())  # clears all existing timestamps.
-
-            self.get_gate_trigger()
 
             # waits for a trigger for trigger_cycle_mu.
             self._gate_func(trigger_cycle_mu)
