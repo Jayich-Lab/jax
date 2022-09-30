@@ -1,10 +1,10 @@
 import asyncio
+
 import numpy as _np
 import pyqtgraph as _pg
-from PyQt5 import QtCore, QtGui, QtWidgets
 from jax import JaxApplet
 from jax.util.ui.fast_plot_trace import FastPlotTrace
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 __all__ = ["RealTimePlotApplet"]
 
@@ -25,15 +25,27 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         ylabel: str, y-axis label. Default "".
         scrolling: bool, whether the viewport scrolls with new data. Default True.
         ip: str, vault server IP address to connect to.
+        ylog: bool, determined whether the y axis will be plotting logarithmically
     """
+
     set_data = QtCore.pyqtSignal(str, _np.ndarray)
     append_data = QtCore.pyqtSignal(str, _np.ndarray)
 
-    def __init__(self, num_of_traces, dataset_names, xlabel="", ylabel="", scrolling=True,
-                 ip="127.0.0.1", **kwds):
+    def __init__(
+        self,
+        num_of_traces,
+        dataset_names,
+        xlabel="",
+        ylabel="",
+        scrolling=True,
+        ip="127.0.0.1",
+        ylog=False,
+        **kwds,
+    ):
         super().__init__(**kwds)
         self.num_of_traces = num_of_traces
         self.dataset_names = dataset_names
+        self.ylog = ylog
         self.scrolling = scrolling
         self._control_pressed = False
         self.setDisabled(True)
@@ -69,6 +81,8 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
         x.setLabel(xlabel, **label_style)
         x.setStyle(tickFont=font, tickTextOffset=tick_text_offset)
 
+        if self.ylog:
+            self.plot_widget.plotItem.setLogMode(y=True)
         y = self.plot_widget.plotItem.getAxis("left")
         y.setLabel(ylabel, **label_style)
         y.setStyle(tickFont=font, tickTextOffset=tick_text_offset)
@@ -156,7 +170,9 @@ class RealTimePlotApplet(QtWidgets.QWidget, JaxApplet):
 
         SHARED_DATA_CHANGE = 128936
         await self.dv.on_shared_data_change(SHARED_DATA_CHANGE)
-        self.dv.addListener(listener=self._data_changed, source=None, ID=SHARED_DATA_CHANGE)
+        self.dv.addListener(
+            listener=self._data_changed, source=None, ID=SHARED_DATA_CHANGE
+        )
         self.setDisabled(False)
 
     async def setup_cxn_listeners(self):
