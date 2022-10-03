@@ -66,6 +66,7 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
 
     def host_startup(self):
         self.trigger_cycle = self.core.seconds_to_mu(50 * us)
+        self._trigger_fixed_delay_mu = self.core.seconds_to_mu(100 * us)
 
     def host_cleanup(self):
         self.disconnect_labrad()
@@ -109,7 +110,13 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
             trigger_cycle_mu = self.trigger_cycle
 
             self.differential_trigger.count(now_mu())  # clears all existing timestamps.
-
+            self.core.break_realtime()
+            if self.rising_pulse:
+                self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
+            else:
+                self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
+            #print("EXIT WHILE 1")
+            '''
             # waits for a trigger for trigger_cycle_mu.
             if self.rising_pulse:
                 self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
@@ -117,10 +124,17 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
                 self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
 
             total_trigger_wait_time_mu += trigger_cycle_mu
-
+            '''
+            
             while total_trigger_wait_time_mu < max_wait_time_mu - trigger_cycle_mu:
                 # wait for a trigger in the cycle
                 gate_end_time_mu = _np.int64(0)
+                if self.rising_pulse:
+                    gate_end_time_mu = self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
+                else:
+                    gate_end_time_mu = self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
+                #print("EXIT WHILE 2")
+                '''
                 if self.rising_pulse:
                     gate_end_time_mu = self.differential_trigger.gate_rising_mu(
                         trigger_cycle_mu
@@ -129,6 +143,7 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
                     gate_end_time_mu = self.differential_trigger.gate_falling_mu(
                         trigger_cycle_mu
                     )
+                '''
                 total_trigger_wait_time_mu += trigger_cycle_mu
 
                 # check for a trigger
@@ -149,9 +164,10 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
                     gate_end_time_mu = self.differential_trigger.gate_falling_mu(
                         trigger_cycle_mu
                     )
-                trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu)
+                trigger_time = self.differential_trigger.timestamp_mu(gate_end_time_mu) 
 
             if trigger_time > 0:  # if trigger is detected at some point
+                at_mu(trigger_time + self._trigger_fixed_delay_mu)
                 self.switch_repump_aom_states(self.rising_pulse)
 
                 # switch to the next pulse
