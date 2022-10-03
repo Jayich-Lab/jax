@@ -115,16 +115,6 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
                 self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
             else:
                 self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
-            #print("EXIT WHILE 1")
-            '''
-            # waits for a trigger for trigger_cycle_mu.
-            if self.rising_pulse:
-                self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
-            else:
-                self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
-
-            total_trigger_wait_time_mu += trigger_cycle_mu
-            '''
             
             while total_trigger_wait_time_mu < max_wait_time_mu - trigger_cycle_mu:
                 # wait for a trigger in the cycle
@@ -133,17 +123,6 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
                     gate_end_time_mu = self.differential_trigger.gate_rising_mu(trigger_cycle_mu)
                 else:
                     gate_end_time_mu = self.differential_trigger.gate_falling_mu(trigger_cycle_mu)
-                #print("EXIT WHILE 2")
-                '''
-                if self.rising_pulse:
-                    gate_end_time_mu = self.differential_trigger.gate_rising_mu(
-                        trigger_cycle_mu
-                    )
-                else:
-                    gate_end_time_mu = self.differential_trigger.gate_falling_mu(
-                        trigger_cycle_mu
-                    )
-                '''
                 total_trigger_wait_time_mu += trigger_cycle_mu
 
                 # check for a trigger
