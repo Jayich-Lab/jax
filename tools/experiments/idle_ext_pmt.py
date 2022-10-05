@@ -12,9 +12,10 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
     """Base class for background experiment to read PMT and set TTL/DDS parameters from an Arduino.
 
     Inherit this class in the experiment repository and define the class variables:
+        DIFFERENTIAL_TRIGGER: the TTL to recieve high/low voltage differential mode output from
+            pmt-arduino.
         REPUMP_AOM_CHANNELS: list of strs, names of DDSes controlling repump lasers.
             To control ions that have hyperfine structures, multiple repump DDSes may be necessary.
-        PMT_EDGECOUNTER: str, edgecounter device for PMT input.
 
     This experiment assumes that the device has at least one AD9910 DDS and at least one TTL board.
     """
@@ -24,7 +25,6 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
     kernel_invariants = {
         "DIFFERENTIAL_TRIGGER",
         "REPUMP_AOM_CHANNELS",
-        "PMT_EDGECOUNTER",
         "repump_aoms",
         "ad9910s",
         "ttl_outs",
