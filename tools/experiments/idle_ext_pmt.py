@@ -26,7 +26,6 @@ class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
         "REPUMP_AOM_CHANNELS",
         "PMT_EDGECOUNTER",
         "repump_aoms",
-        "pmt_counter",
         "ad9910s",
         "ttl_outs",
     }
