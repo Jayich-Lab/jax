@@ -9,7 +9,8 @@ __all__ = ["IDLE_EXT_PMT"]
 
 
 class IDLE_EXT_PMT(InfiniteLoop, SinaraEnvironment):
-    """Base class for background experiment to read PMT counts from an Arduino. Also sets TTL/DDS parameters.
+    """Base class for background experiment to read PMT counts from an Arduino. 
+    Also sets TTL/DDS parameters.
 
     Inherit this class in the experiment repository and define the class variables:
         DIFFERENTIAL_TRIGGER: the TTL to recieve high/low voltage differential mode output from
