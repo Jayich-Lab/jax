@@ -3,7 +3,7 @@ from jax import JaxApplet
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class PMT(QtWidgets.QWidget, JaxApplet):
+class PMTArduino(QtWidgets.QWidget, JaxApplet):
     def __init__(self, args, **kwds):
         super().__init__(**kwds)
         self._dv_on = False
