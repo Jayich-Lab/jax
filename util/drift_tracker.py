@@ -61,16 +61,24 @@ class DriftTracker:
         self._center_drift_rate_mu = 0.
         self.uB_over_h = _c.physical_constants["Bohr magneton"][0] / _c.h
 
+    @rpc
+    def get_epoch_time(self) -> TFloat:
+        """Returns the current epoch time in seconds."""
+        return _t.time()
+
     @kernel(flags={"fast-math"})
-    def sync_time(self, time_now: TFloat, mu: TFloat = 1e-9):
+    def sync_time(self, mu: TFloat = 1e-9):
         """Syncs wall clock time with core device time.
 
-        Must be called if self.get_frequency_kernel or self.get_Zeeman_frequency_kernel are used.
+        This function sets the drift rate and calibration time in machine units.
+        It needs to be called once before `get_frequency_kernel` or `get_Zeeman_frequency_kernel`
+        is used. This function contains a remote procedure call so it may be slow.
 
         Args:
             time_now: float, epoch time now.
             mu: float, machine unit of time in s. Default 1e-9 (1 ns).
         """
+        time_now = self.get_epoch_time()
         time_after_calibration = time_now - self.last_calibration
         self._last_calibration_mu = now_mu() - _np.int64(time_after_calibration / mu)
         # time is converted to machine units, frequency is still in Hz.
