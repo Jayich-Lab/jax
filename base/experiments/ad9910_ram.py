@@ -53,7 +53,7 @@ class RAMProfile:
             NotImplementedError: Unsupported RAM types found.
         """
         # Make sure the RAM can hold the entire sequence
-        assert(len(data) <= RAMProfile.RAM_SIZE)
+        assert (len(data) <= RAMProfile.RAM_SIZE)
 
         ram = np.zeros((len(data),), dtype=int)
         # Avoid contaminating the passed in data list
