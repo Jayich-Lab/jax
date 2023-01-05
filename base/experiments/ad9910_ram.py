@@ -182,16 +182,33 @@ class RAMProfileMap:
         # RAM profiles is logically sound
         for cpld in self.cplds:
             cpld.set_profile(7)
+
+    @kernel
+    def enable(self):
+        """Set register appropriately for enabling RAM mode.
+            After the function is called. RAM mode is NOT YET active.
+            Commit RAM enable by calling commit_enable() after.
+
+        """
         # Queue in RAM enable operations to each DDS
         for dds, ram_profile in self.ram_profile_map:
             dds.set_cfr1(ram_enable=1,
                          ram_destination=ram_profile.dest,
                          osk_enable=ram_profile.osk_enable)
 
-        # Enable the RAM operations using the same I/O update pulse
-        for cpld in self.cplds:
-            cpld.io_update.pulse_mu(8)
+    @kernel
+    def commit_enable(self):
+        """Commit the previous enable() call.
 
+        """
+        # Start RAM mode using the same profile switch update.
+        # This is achieved by invoking SPI transactions in the same timestamp.
+        now = now_mu()
+        for cpld in self.cplds:
+            at_mu(now)
+            cpld.set_profile(0)
+        # The timeline advancement of SPI is **naturally restored** here.
+        # Note the ordering of at_mu() and set_profile().
 
 class AD9910RAM(JaxExperiment):
     """Base class for experiments that uses the AD9910 RAM
