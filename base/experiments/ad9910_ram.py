@@ -1,6 +1,5 @@
 from artiq.experiment import *
 from artiq.coredevice.ad9910 import *
-from jax import JaxExperiment
 import numpy as np
 from enum import Enum
 
