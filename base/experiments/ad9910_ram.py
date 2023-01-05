@@ -27,26 +27,54 @@ class RAMType(Enum):
 
 
 class RAMProfile:
+    # From AD9910 datasheet:
+    # "The AD9910 makes use of a 1024 × 32-bit RAM."
+    # Each entry occupies 32 bits.
     RAM_SIZE = 1024
 
     def __init__(self, dds, data, ramp_interval, ram_type, ram_mode,
-                 base_frequency=0, base_phase=0, base_amplitude=0):
+                 base_frequency=0, base_phase=0, base_amplitude=1.0):
         """Generate a RAM profile to a DDS channel.
-            Include optional parameters based on the "Data Source Priority" of
-            AD9910. See the switch case below to find out which optional
-            parameter is needed.
+
+            RAM profile is an operation mode that feeds RAM data into the DDS
+            as DDS parameter(s) (frequency/phase/amplitude). At regular time
+            interval, the DDS fetches a new RAM data and updates the selected
+            parameter. See the arguments to tune to interval, DDS parameter
+            and data selection. (See args ramp_interval, ram_type, ram_mode)
+
+            Unlike single-tone profiles, RAM profiles only specifies a subset
+            of parameters. The remaining parameters are specified through the
+            FTW/POW/ASF registers instead (See args base_frequency, base_phase,
+            base_amplitude). Note that unnecessary paramters will be ignored.
+
+            For example, a frequency RAM profile feeds RAM as frequencies.
+            Phase and amplitude are specified through POW and ASF registers
+            respectively. These registers are controlled by the base_phase and
+            base_amplitude args.
+
+            Reference: AD9910 datasheet (Rev. E), Theory of Operation, Mode
+            Priority, Table 5: Data Source Priority
+
+            Note: There are different data latencies between different RAM
+            types. Amplitude takes 36 fewer sysclk cycles to reach the DDS
+            output. Refer to AD9910 datasheet (Rev. E) p.6, Data Latency
 
         Args:
-            dds: The DDS that will playback the RAM profile.
-            data: Data (amplitude, phase, frequencies) to be put into the RAM.
-            ramp_interval: The time interval between each step of the RAM.
-                Note: If possible, keep the interval at a multiple of
-                    4*T_sysclk. T_sysclk is generally 1ns.
-            ram_type: See the RAMType enum.
-            ramp_mode: The playback mode of the RAM. See urukul.py in ARTIQ.
-            base_frequency: (Optional) Unmodulated DDS frequency.
-            base_phase: (Optional) Unmodulated DDS phase.
-            base_amplitude: (Optional) Unmodulated DDS amplitude.
+            dds (AD9910): The DDS that will playback the RAM profile.
+            data ([..]): Data (amplitude, phase, frequencies) to be put into
+                the RAM.
+                The type should be [float] for frequency/phase/amplitude RAM;
+                and [(phase (float), amplitude (float))] for polar RAM.
+                (Sanity check: It is a list of tuples for polar RAM.)
+            ramp_interval (float): The time interval between each step of the
+                RAM mode playback. Keep the interval at a multiple of
+                4*T_sysclk (4*1 ns).
+            ram_type (RAMType): See the RAMType enum.
+            ram_mode (int): The playback mode of the RAM.
+                See coredevice/ad9910.py in ARTIQ.
+            base_frequency (float): (Optional) Unmodulated DDS frequency.
+            base_phase (float): (Optional) Unmodulated DDS phase.
+            base_amplitude (float): (Optional) Unmodulated DDS amplitude.
 
         Raises:
             NotImplementedError: Unsupported RAM types found.
@@ -173,6 +201,8 @@ class RAMProfileMap:
             self.core.break_realtime()
 
             # Alternatively, use dds.set()
+            # set_mu()/set() triggers an I/O update to latch the data
+            # It wouldn't matter when we change the profile at the end
             dds.set_mu(ftw=ram_profile.ftw,
                        pow_=ram_profile.pow,
                        asf=ram_profile.asf,
