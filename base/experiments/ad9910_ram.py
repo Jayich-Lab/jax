@@ -71,8 +71,34 @@ class RAMProfile:
                 RAM mode playback. Keep the interval at a multiple of
                 4*T_sysclk (4*1 ns).
             ram_type: RAMType, see the RAMType enum.
-            ram_mode: int, the playback mode of the RAM.
-                See coredevice/ad9910.py in ARTIQ.
+            ram_mode: int, the playback mode of the RAM. AD9910 allows the
+                following RAM playback modes.
+
+                - RAM_MODE_DIRECTSWITCH:
+                    Only the first data in the RAM profile is fed to the DDS
+
+                The other modes can fetch new RAM data to the DDS. The main
+                difference is the behavior once the last data is fetched.
+
+                - RAM_MODE_RAMPUP:
+                    DDS will not fetch anything after getting the last data.
+                - RAM_MODE_BIDIR_RAMP:
+                    Same as RAM_MODE_RAMPUP. However, an additional ramp down
+                    mode is supported by setting profile=1.
+                - RAM_MODE_CONT_BIDIR_RAMP:
+                    The RAM profile will ramp down after getting the last data.
+                    Then ramp up after getting the first data, and so on.
+                - RAM_MODE_CONT_RAMPUP:
+                    The RAM profile will repeat itself after getting the last
+                    data from the RAM.
+
+                See the following sections on the datasheet regarding the
+                exact behavior of these 5 modes.
+                - RAM Direct Switch Mode (p.33)
+                - RAM Ramp-Up Mode (p.34, Figure 43)
+                - RAM Bidirectional Ramp Mode (p.38, Figure 46)
+                - RAM Continuous Bidirectional Ramp Mode (p.39, Figure 47)
+                - RAM Continuous Recirculate Mode (p.40, Figure 48)
             base_frequency: float, the unmodulated DDS frequency.
                 0.0 Hz by default. This argument is optional.
             base_phase: float, the unmodulated DDS phase.
