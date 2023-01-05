@@ -177,6 +177,11 @@ class RAMProfileMap:
                        asf=ram_profile.asf,
                        ram_destination=ram_profile.dest)
 
+        # Go back to single-tone profiles
+        # This is to ensure the symmetry of states, so enabling and disabling
+        # RAM profiles is logically sound
+        for cpld in self.cplds:
+            cpld.set_profile(7)
         # Queue in RAM enable operations to each DDS
         for dds, ram_profile in self.ram_profile_map:
             dds.set_cfr1(ram_enable=1,
