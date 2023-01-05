@@ -12,7 +12,7 @@ import numpy as np
 __all__ = ["RAM"]
 
 
-class RAM(AD9910RAM, SinaraEnvironment):
+class RAM(JaxExperiment, SinaraEnvironment):
     """Example experiment generating a DDS amplitude ramp waveform, and a frequency sweeo.
 
     An experiment must first inherit from a base experiment and then inherit an environment.
