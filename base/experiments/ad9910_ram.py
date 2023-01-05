@@ -177,6 +177,22 @@ class RAMProfileMap:
     def load_ram(self):
         """Load RAM operation. It initializes the RAM content and profiles.
 
+        Timing: (Figures generated using Kasli 2.0, 1024 RAM entries, 1 DDS)
+            The entire write_ram() call is measured to have taken ~600 us
+            (omitting the wasted cycles due to the RTIO FIFO being filled up).
+            The difference between the RTIO timestamp cursor and the RTIO
+            counter (slack) reduced by ~50 us (with the same omission).
+
+            The omission was applied since providing excessive slack will only
+            result in wasted clock cycles. write_ram() will hang and waste
+            clock cycles if the RTIO FIFO is saturated. No more RTIO events
+            could be submitted until some of these events are executed, which
+            frees up the FIFO.
+
+            Each RAM entry contributes to the slack loss. From experimentation
+            and generalization, the first 127 RAM entries each contributes
+            approximately ~60 ns of slack los on average. The rest of the RAM
+            entries each contributes to ~40 ns of slack loss on average.
         """
         # Switch to profile 0 for RAM. This is the default profile.
         # Using other profiles for RAM is possible with appropriate parameters
