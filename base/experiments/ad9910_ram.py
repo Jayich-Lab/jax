@@ -273,7 +273,8 @@ class RAMProfileMap:
 
     @kernel
     def commit_enable(self):
-        """Commit the previous enable() call.
+        """Commit the previous enable() call. The RAM profile will always
+            start from the designated first address.
 
         """
         # Start RAM mode using the same profile switch update.
