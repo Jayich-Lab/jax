@@ -65,11 +65,18 @@ class RAM(JaxExperiment, SinaraEnvironment):
         self.profile_map.append(self.dds2, ram_profile2)
         self.profile_map.append(self.dds3, ram_profile3)
 
-        # Assign the kernel function here
-        self.kernel_func = self.run_kernel
+    @kernel
+    def init_dds(self, dds):
+        """Enable the supplied DDS with 6.0 dB attenuation
+
+        """
+        self.core.break_realtime()
+        dds.init()
+        dds.set_att(6.*dB)
+        dds.cfg_sw(True)
 
     @kernel
-    def run_kernel(self):
+    def run(self):
         self.core.reset()
         self.core.break_realtime()
 
