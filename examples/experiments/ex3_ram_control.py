@@ -63,8 +63,8 @@ class RAM(JaxExperiment, SinaraEnvironment):
             base_frequency=100*MHz, base_amplitude=1.0)
 
         self.profile_map = RAMProfileMap(self.core)
-        self.profile_map.append(self.dds1, ram_profile0)
-        self.profile_map.append(self.dds0, ram_profile1)
+        self.profile_map.append(self.dds0, ram_profile0)
+        self.profile_map.append(self.dds1, ram_profile1)
         self.profile_map.append(self.dds2, ram_profile2)
         self.profile_map.append(self.dds3, ram_profile3)
 
