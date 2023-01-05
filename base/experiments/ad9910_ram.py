@@ -86,7 +86,9 @@ class RAMProfile:
                 self.pow = dds.turns_to_pow(base_phase)
             case RAMType.POLAR:
                 self.dest = RAM_DEST_POWASF
-                phase, amp = data
+                # Unpack the lsit of tuples into tuples
+                # Zip it again to convert it into 2 lists
+                phase, amp = zip(*data)
                 dds.turns_amplitude_to_ram(phase, amp, ram)
                 self.ftw = dds.frequency_to_ftw(base_frequency)
             case _:
