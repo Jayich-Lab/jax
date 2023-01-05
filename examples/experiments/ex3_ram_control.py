@@ -91,4 +91,28 @@ class RAM(JaxExperiment, SinaraEnvironment):
         self.init_dds(self.dds2)
         self.init_dds(self.dds3)
 
-        self.profile_map.program()
+        # Prepare a RAM profile & a single-tione profile
+        for dds in [self.dds0, self.dds1, self.dds2, self.dds3]:
+            dds.set(frequency=5*MHz, amplitude=0.2)
+
+        self.profile_map.load_ram()
+        self.profile_map.enable()
+
+        # DDS output sequence:
+        # 1. RAM profiles for 1 ms
+        # 2. Single-tone profiles for 1 ms
+        # 3. RAM profiles for another 1 ms
+        # 4. Single-tone profiles until reset
+        self.profile_map.commit_enable()
+        self.profile_map.disable()
+
+        delay(1*ms)
+        self.profile_map.commit_disable()
+        self.profile_map.enable()
+
+        delay(1*ms)
+        self.profile_map.commit_enable()
+        self.profile_map.disable()
+
+        delay(1*ms)
+        self.profile_map.commit_disable()
