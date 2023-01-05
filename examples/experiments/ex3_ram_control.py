@@ -1,6 +1,6 @@
 from artiq.experiment import *
 from artiq.coredevice.ad9910 import *
-from jax import SinaraEnvironment, AD9910RAM, RAMType, RAMProfile, RAMProfileMap
+from jax import SinaraEnvironment, RAMType, RAMProfile, RAMProfileMap, JaxExperiment
 import numpy as np
 
 

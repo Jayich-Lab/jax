@@ -5,5 +5,5 @@ from jax.base.environments.sinara_environment import SinaraEnvironment
 from jax.base.experiments.jax_experiment import JaxExperiment
 from jax.base.experiments.scan import Scan
 from jax.base.experiments.infinite_loop import InfiniteLoop
-from jax.base.experiments.ad9910_ram import AD9910RAM, RAMType, RAMProfile, RAMProfileMap
+from jax.base.experiments.ad9910_ram import RAMType, RAMProfile, RAMProfileMap
 from jax.base.sequences.sequence import Sequence
