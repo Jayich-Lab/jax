@@ -210,19 +210,31 @@ class RAMProfileMap:
         # The timeline advancement of SPI is **naturally restored** here.
         # Note the ordering of at_mu() and set_profile().
 
-class AD9910RAM(JaxExperiment):
-    """Base class for experiments that uses the AD9910 RAM
-
-    """
     @kernel
-    def init_dds(self, dds):
-        """Enable the supplied DDS with 6.0 dB attenuation
+    def disable(self):
+        """Set register appropriately for disabling RAM mode.
+            After the function is called. RAM mode is STILL active.
+            Commit RAM disable by calling commit_enable() after.
 
         """
-        self.core.break_realtime()
-        dds.init()
-        dds.set_att(6.*dB)
-        dds.cfg_sw(True)
+        for dds, _ in self.ram_profile_map:
+            # Disable RAM and OSK.
+            # Single-tone profiles use the profile registers for amplitude
+            # control. The state of the OSK does not impact the logic here.
+            dds.set_cfr1(ram_enable=0, osk_enable=0)
 
-    def run(self):
-        self.kernel_func()
+    @kernel
+    def commit_disable(self):
+        """Commit the previous disable() call.
+            After this call has taken effect (in terms of the ARTIQ timeline),
+            single-tone profiles are enabled instead.
+
+        """
+        # End RAM mode using the same profile switch update.
+        # This is achieved by invoking SPI transactions in the same timestamp.
+        now = now_mu()
+        for cpld in self.cplds:
+            at_mu(now)
+            cpld.set_profile(7)
+        # The timeline advancement of SPI is **naturally restored** here.
+        # Note the ordering of at_mu() and set_profile().
