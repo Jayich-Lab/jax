@@ -28,9 +28,6 @@ class RAMType(Enum):
 
 
 class RAMProfile:
-    # From AD9910 datasheet:
-    # "The AD9910 makes use of a 1024 × 32-bit RAM."
-    # Each entry occupies 32 bits.
     RAM_SIZE = 1024
 
     def __init__(self, dds, data, ramp_interval, ram_type, ram_mode,
@@ -42,6 +39,9 @@ class RAMProfile:
             interval, the DDS fetches a new RAM data and updates the selected
             parameter. See the arguments to tune to interval, DDS parameter
             and data selection. (See args ramp_interval, ram_type, ram_mode)
+
+            All RAM profiles in the same AD9910 has access to the same 1024 x
+            32-bits RAM. There are 1024 entries, each entry occupies 32-bits.
 
             Unlike single-tone profiles, RAM profiles only specifies a subset
             of parameters. The remaining parameters are specified through the
