@@ -30,7 +30,7 @@ class RAMType(Enum):
 class RAMProfile:
     RAM_SIZE = 1024
 
-    def __init__(self, dds, data, ramp_interval, ram_type, ramp_mode,
+    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode,
                  base_frequency=0, base_phase=0, base_amplitude=0):
         """Generate a RAM profile to a DDS channel.
             Include optional parameters based on the "Data Source Priority" of
@@ -110,7 +110,7 @@ class RAMProfile:
         # Note: Integer conversion may cause inaccuracy
         self.step = int(ramp_interval * dds.sysclk / 4.0)
 
-        self.ramp_mode = ramp_mode
+        self.ram_mode = ram_mode
 
 
 class RAMProfileMap:
@@ -164,7 +164,7 @@ class RAMProfileMap:
                 start=ram_profile.start_addr,
                 end=ram_profile.end_addr,
                 step=ram_profile.step,
-                mode=ram_profile.ramp_mode)
+                mode=ram_profile.ram_mode)
             dds.cpld.io_update.pulse_mu(8)
 
             # Program the RAM, break_realtime to avoid RTIOunderflow
