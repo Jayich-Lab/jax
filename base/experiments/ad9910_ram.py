@@ -61,24 +61,25 @@ class RAMProfile:
             output. Refer to AD9910 datasheet (Rev. E) p.6, Data Latency
 
         Args:
-            dds (AD9910): The DDS that will playback the RAM profile.
-            data ([..]): Data (amplitude, phase, frequencies) to be put into
-                the RAM.
-                The type should be [float] for frequency/phase/amplitude RAM;
-                and [(phase (float), amplitude (float))] for polar RAM.
-                (Sanity check: It is a list of tuples for polar RAM.)
-            ramp_interval (float): The time interval between each step of the
+            dds: AD9910, the DDS that will playback the RAM profile.
+            data: list of float/2-tuples (elaborated below), the data
+                (amplitude, phase, frequencies) to be put into the RAM.
+                The type should be "list of float" for frequency/phase/
+                amplitude RAM; and list of 2-tuples for polar RAM. The tuple
+                consists of 2 floats. The first represents phase, and the
+                second represents amplitude.
+            ramp_interval: float, the time interval between each step of the
                 RAM mode playback. Keep the interval at a multiple of
                 4*T_sysclk (4*1 ns).
-            ram_type (RAMType): See the RAMType enum.
-            ram_mode (int): The playback mode of the RAM.
+            ram_type: RAMType, see the RAMType enum.
+            ram_mode: int, the playback mode of the RAM.
                 See coredevice/ad9910.py in ARTIQ.
-            base_frequency (float): (Optional) Unmodulated DDS frequency.
-                0.0 Hz by default.
-            base_phase (float): (Optional) Unmodulated DDS phase.
-                0.0 turns by default.
-            base_amplitude (float): (Optional) Unmodulated DDS amplitude.
-                1.0 by default.
+            base_frequency: float, the unmodulated DDS frequency.
+                0.0 Hz by default. This argument is optional.
+            base_phase: float, the unmodulated DDS phase.
+                0.0 turns by default. This argument is optional.
+            base_amplitude: float, the unmodulated DDS amplitude.
+                1.0 by default. This argument is optional.
 
         Raises:
             NotImplementedError: Unsupported RAM types found.
@@ -151,7 +152,7 @@ class RAMProfileMap:
         """Initialize a RAM profile to DDS mapping
 
         Args:
-            core: The ARTIQ Core instance for time control.
+            core: Core, the ARTIQ Core instance for time control.
         """
         self.ram_profile_map = []
         self.cplds = []
@@ -162,8 +163,8 @@ class RAMProfileMap:
             CPLDs that have DDSes that playback the RAM profile.
 
         Args:
-            dds: The DDS that will playback the RAM profile.
-            ram_profile: The RAM profile.
+            dds: AD9910, the DDS that will playback the RAM profile.
+            ram_profile: RAMProfile, the RAM profile.
         """
         self.ram_profile_map.append((dds, ram_profile))
 
