@@ -1,5 +1,6 @@
-from artiq.experiment import *
-from artiq.coredevice.ad9910 import *
+from artiq.experiment import kernel
+from artiq.coredevice.ad9910 import RAM_DEST_FTW, RAM_DEST_POW, RAM_DEST_ASF, \
+    RAM_DEST_POWASF
 import numpy as np
 from enum import Enum
 
