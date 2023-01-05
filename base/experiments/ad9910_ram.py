@@ -73,8 +73,11 @@ class RAMProfile:
             ram_mode (int): The playback mode of the RAM.
                 See coredevice/ad9910.py in ARTIQ.
             base_frequency (float): (Optional) Unmodulated DDS frequency.
+                0.0 Hz by default.
             base_phase (float): (Optional) Unmodulated DDS phase.
+                0.0 turns by default.
             base_amplitude (float): (Optional) Unmodulated DDS amplitude.
+                1.0 by default.
 
         Raises:
             NotImplementedError: Unsupported RAM types found.
