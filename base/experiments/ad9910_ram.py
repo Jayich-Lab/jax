@@ -46,7 +46,7 @@ class RAMProfile:
             Unlike single-tone profiles, RAM profiles only specifies a subset
             of parameters. The remaining parameters are specified through the
             FTW/POW/ASF registers instead (See args base_frequency, base_phase,
-            base_amplitude). Note that unnecessary paramters will be ignored.
+            base_amplitude). Note that unnecessary parameters will be ignored.
 
             For example, a frequency RAM profile feeds RAM as frequencies.
             Phase and amplitude are specified through POW and ASF registers
@@ -118,7 +118,7 @@ class RAMProfile:
                 self.pow = dds.turns_to_pow(base_phase)
             case RAMType.POLAR:
                 self.dest = RAM_DEST_POWASF
-                # Unpack the lsit of tuples into tuples
+                # Unpack the list of tuples into tuples
                 # Zip it again to convert it into 2 lists
                 phase, amp = zip(*data)
                 dds.turns_amplitude_to_ram(phase, amp, ram)
@@ -168,8 +168,8 @@ class RAMProfileMap:
         """
         self.ram_profile_map.append((dds, ram_profile))
 
-        # Add the associlated CPLD to the list if not already there.
-        # ARTIQ-Python does not support iterration of a Python builtin set
+        # Add the associated CPLD to the list if not already there.
+        # ARTIQ-Python does not support iteration of a Python builtin set
         # The workaround is to maintain a list, but convert it into set to
         # avoid CPLD duplications.
         cplds = set(self.cplds)
@@ -188,7 +188,7 @@ class RAMProfileMap:
             cpld.set_profile(0)
 
         for dds, ram_profile in self.ram_profile_map:
-            # Datasheets strongly recommands setting ram_enable=0 before
+            # The datasheet strongly recommends setting ram_enable=0 before
             # writing anything to the RAM profiles
             dds.set_cfr1(ram_enable=0)
             dds.cpld.io_update.pulse_mu(8)
@@ -201,7 +201,7 @@ class RAMProfileMap:
                 mode=ram_profile.ram_mode)
             dds.cpld.io_update.pulse_mu(8)
 
-            # Program the RAM, break_realtime to avoid RTIOunderflow
+            # Program the RAM, break_realtime to avoid RTIOUnderflow
             dds.write_ram(ram_profile.ram)
             self.core.break_realtime()
 
@@ -250,7 +250,7 @@ class RAMProfileMap:
     def disable(self):
         """Set register appropriately for disabling RAM mode.
             After the function is called. RAM mode is STILL active.
-            Commit RAM disable by calling commit_enable() after.
+            Commit RAM disable by calling commit_disable() after.
 
         """
         for dds, _ in self.ram_profile_map:
