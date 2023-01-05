@@ -87,7 +87,7 @@ class RAMProfile:
         # Make sure the RAM can hold the entire sequence
         assert (len(data) <= RAMProfile.RAM_SIZE)
 
-        ram = np.zeros((len(data),), dtype=int)
+        ram = np.zeros((len(data),), dtype=np.int32)
         # Avoid contaminating the passed in data list
         data = data.copy()
         # SPI transaction of AD9910 mandates the transmission of higher
