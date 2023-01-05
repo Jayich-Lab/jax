@@ -41,10 +41,10 @@ class RAM(JaxExperiment, SinaraEnvironment):
 
         # Generate a linearly growing amplitude, in a list
         # When targeting amplitude in RAM, amplitude modulation is performed
-        amp = np.linspace(0.0, 1.0, num=10).tolist()
-        freq = np.linspace(1e6, 100e6, num=10).tolist()
-        phase = [0.2, 0.7]
-        polar = [[0.2, 0.0], [0.7, 0.8]]
+        amp = np.linspace(0.1, 1.0, num=10).tolist()
+        freq = np.linspace(1e6, 10e6, num=10).tolist()
+        phase = np.linspace(0.0, 4.5, num=10).tolist()
+        polar = list(zip(phase, amp))
 
         ram_profile0 = RAMProfile(
             self.dds0, amp, 400*ns, RAMType.AMP, RAM_MODE_CONT_RAMPUP,
