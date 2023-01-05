@@ -129,8 +129,7 @@ class RAMProfile:
         self.start_addr = 0
         self.end_addr = len(ram) - 1    # Inclusive
 
-        # Configure ther use of OSK. Note that using different OSK settings for
-        # different channels introduces step swiching latencies
+        # Configure the use of OSK.
         if ram_type == RAMType.AMP or ram_type == RAMType.POLAR:
             # Disable OSK. OSK amplitude as it has a higher priority than RAM.
             self.osk_enable = 0
@@ -138,10 +137,9 @@ class RAMProfile:
             # Enable OSK. There are no other utilizable amplitude data source.
             self.osk_enable = 1
 
-        # Conversion to list to avoid type mismatch in the kernel
-        self.ram = ram.tolist()
+        # Conversion to a list of numpy int32 to avoid type inference.
+        self.ram = list(ram)
 
-        # Note: Integer conversion may cause inaccuracy
         self.step = int(ramp_interval * dds.sysclk / 4.0)
 
         self.ram_mode = ram_mode
