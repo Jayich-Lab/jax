@@ -143,8 +143,8 @@ class RAMProfileMap:
         self.cplds = list(cplds)
 
     @kernel
-    def program(self):
-        """Program the RAM profiles to the corresponding AD9910s.
+    def load_ram(self):
+        """Load RAM operation. It initializes the RAM content and profiles.
 
         """
         # Switch to profile 0 for RAM. This is the default profile.
