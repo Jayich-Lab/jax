@@ -94,7 +94,7 @@ class RAM(JaxExperiment, SinaraEnvironment):
         self.init_dds(self.dds2)
         self.init_dds(self.dds3)
 
-        # Prepare a RAM profile & a single-tione profile
+        # Prepare a RAM profile & a single-tone profile
         for dds in [self.dds0, self.dds1, self.dds2, self.dds3]:
             dds.set(frequency=5*MHz, amplitude=0.2)
 
