@@ -26,9 +26,6 @@ class RAM(JaxExperiment, SinaraEnvironment):
     Change the DDSes and Urukul CPLDs to use different Urukuls and different RF channels.
     Change the numpy generated array to generate a different waveform.
 
-    Generating with an amplitude RAM profile & a non-amplitude RAM profile introduces
-    an approximately 40ns delay.
-
     Before running this experiment, the DDS output should be terminated with a 50 ohm terminator.
     """
     def build(self):
