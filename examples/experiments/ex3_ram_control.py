@@ -13,16 +13,19 @@ __all__ = ["RAM"]
 
 
 class RAM(JaxExperiment, SinaraEnvironment):
-    """Example experiment generating a DDS amplitude ramp waveform, and a frequency sweeo.
+    """Example experiment generating several DDS waveform, controlled by the
+    AD9910 RAM.
 
-    An experiment must first inherit from a base experiment and then inherit an environment.
-    The base experiment defines the self.run() function, and interactions with the RAM
-    profiles.
-    The environment sets up the labrad connection and provides functions for data saving,
-    loading parameters, resetting hardware, etc.
+    The following repetitive waveform are generated:
+    - Channel 0: Amplitude modulation. The DDS amplitude scale factor increments by 0.1 at
+        every step. It increases from 0.1 to 1.0.
+    - Channel 1: Frequency sweep. Increasing DDS frequency from 1 MHz to 10 MHz. The frequency
+        increments 1 MHz every step.
+    - Channel 2: Binary phase modulation. The phase is flipped by 0.5 turns at every step.
+    - Channel 3: Polar modulation. The amplitude is the same as channel 0, and the phase is
+        flipped by 0.5 turns at every step, just like Channel 2.
 
-    This is an experiment generating a repeatitive DDS amplitude ramp, as well as a
-    frequency sweep. To run this experiment, you need to run the "artiq" labrad server.
+    To run this experiment, you need to run the "artiq" labrad server.
     Change the DDSes and Urukul CPLDs to use different Urukuls and different RF channels.
     Change the numpy generated array to generate a different waveform.
 
