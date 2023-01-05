@@ -28,21 +28,20 @@ class RAMType(Enum):
 
 
 class RAMProfile:
+    """RAM profile is an operation mode that feeds RAM data into the DDS as
+        DDS parameter(s) (frequency/phase/amplitude). At an user-defined time
+        interval, the DDS fetches a new RAM data and updates the selected
+        parameter. See the arguments of the constructor (__init__(..)) to tune
+        the interval, DDS parameter and data selection of the RAM playback.
+
+        All RAM profiles in the same AD9910 has access to the same 1024 x
+        32-bits RAM. There are 1024 entries, each entry occupies 32-bits.
+    """
     RAM_SIZE = 1024
 
     def __init__(self, dds, data, ramp_interval, ram_type, ram_mode,
                  base_frequency=0, base_phase=0, base_amplitude=1.0):
         """Generate a RAM profile to a DDS channel.
-
-            RAM profile is an operation mode that feeds RAM data into the DDS
-            as DDS parameter(s) (frequency/phase/amplitude). At regular time
-            interval, the DDS fetches a new RAM data and updates the selected
-            parameter. See the arguments to tune to interval, DDS parameter
-            and data selection. (See args ramp_interval, ram_type, ram_mode)
-
-            All RAM profiles in the same AD9910 has access to the same 1024 x
-            32-bits RAM. There are 1024 entries, each entry occupies 32-bits.
-
             Unlike single-tone profiles, RAM profiles only specifies a subset
             of parameters. The remaining parameters are specified through the
             FTW/POW/ASF registers instead (See args base_frequency, base_phase,
