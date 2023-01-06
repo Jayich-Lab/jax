@@ -99,23 +99,29 @@ class RAM(JaxExperiment, SinaraEnvironment):
             dds.set(frequency=5*MHz, amplitude=0.2)
 
         self.profile_map.load_ram()
-        self.profile_map.enable()
 
         # DDS output sequence:
-        # 1. RAM profiles for 1 ms
-        # 2. Single-tone profiles for 1 ms
-        # 3. RAM profiles for another 1 ms
+        # 1. RAM profiles for 10 us
+        # 2. Single-tone profiles for 10 us
+        # 3. RAM profiles for another 10 us
         # 4. Single-tone profiles until reset
+
+        self.profile_map.enable()
+        # Record time right before commit
+        now = now_mu()
         self.profile_map.commit_enable()
         self.profile_map.disable()
 
-        delay(1*ms)
+        now += self.core.seconds_to_mu(10*us)
+        at_mu(now)
         self.profile_map.commit_disable()
         self.profile_map.enable()
 
-        delay(1*ms)
+        now += self.core.seconds_to_mu(10*us)
+        at_mu(now)
         self.profile_map.commit_enable()
         self.profile_map.disable()
 
-        delay(1*ms)
+        now += self.core.seconds_to_mu(10*us)
+        at_mu(now)
         self.profile_map.commit_disable()
