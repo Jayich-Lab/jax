@@ -233,7 +233,7 @@ class RAMProfileMap:
 
             Each RAM entry contributes to the slack loss. From experimentation
             and generalization, the first 127 RAM entries each contributes
-            approximately ~60 ns of slack los on average. The rest of the RAM
+            approximately ~60 ns of slack loss on average. The rest of the RAM
             entries each contributes to ~40 ns of slack loss on average.
         """
         # Switch to profile 0 for RAM. This is the default profile.
