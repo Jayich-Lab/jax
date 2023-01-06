@@ -189,6 +189,9 @@ class RAMProfileMap:
         core: Core, the ARTIQ Core instance for time control.
     """
     def __init__(self, core):
+        self._ram_profile_map = []
+        self._cplds = []
+        self._core = core
 
     def append(self, dds, ram_profile):
         """Append a RAM profile into the builder.
@@ -200,15 +203,15 @@ class RAMProfileMap:
             dds: AD9910, the DDS that will playback the RAM profile.
             ram_profile: RAMProfile, the RAM profile.
         """
-        self.ram_profile_map.append((dds, ram_profile))
+        self._ram_profile_map.append((dds, ram_profile))
 
         # Add the associated CPLD to the list if not already there.
         # ARTIQ-Python does not support iteration of a Python builtin set
         # The workaround is to maintain a list, but convert it into set to
         # avoid CPLD duplications.
-        cplds = set(self.cplds)
+        cplds = set(self._cplds)
         cplds.add(dds.cpld)
-        self.cplds = list(cplds)
+        self._cplds = list(cplds)
 
     @kernel
     def load_ram(self):
@@ -236,10 +239,10 @@ class RAMProfileMap:
         # Switch to profile 0 for RAM. This is the default profile.
         # Using other profiles for RAM is possible with appropriate parameters
         # for future AD9910 function calls.
-        for cpld in self.cplds:
+        for cpld in self._cplds:
             cpld.set_profile(0)
 
-        for dds, ram_profile in self.ram_profile_map:
+        for dds, ram_profile in self._ram_profile_map:
             # The datasheet strongly recommends setting ram_enable=0 before
             # writing anything to the RAM profiles
             dds.set_cfr1(ram_enable=0)
@@ -255,7 +258,7 @@ class RAMProfileMap:
 
             # Program the RAM, break_realtime to avoid RTIOUnderflow
             dds.write_ram(ram_profile.ram)
-            self.core.break_realtime()
+            self._core.break_realtime()
 
             # Alternatively, use dds.set()
             # set_mu()/set() triggers an I/O update to latch the data
@@ -268,7 +271,7 @@ class RAMProfileMap:
         # Go back to single-tone profiles
         # This is to ensure the symmetry of states, so enabling and disabling
         # RAM profiles is logically sound
-        for cpld in self.cplds:
+        for cpld in self._cplds:
             cpld.set_profile(7)
 
     @kernel
@@ -279,7 +282,7 @@ class RAMProfileMap:
         Commit RAM enable by calling commit_enable() after.
         """
         # Queue in RAM enable operations to each DDS
-        for dds, ram_profile in self.ram_profile_map:
+        for dds, ram_profile in self._ram_profile_map:
             dds.set_cfr1(ram_enable=1,
                          ram_destination=ram_profile.dest,
                          osk_enable=ram_profile.osk_enable)
@@ -292,7 +295,7 @@ class RAMProfileMap:
         # Start RAM mode using the same profile switch update.
         # This is achieved by invoking SPI transactions in the same timestamp.
         now = now_mu()
-        for cpld in self.cplds:
+        for cpld in self._cplds:
             at_mu(now)
             cpld.set_profile(0)
         # The timeline advancement of SPI is **naturally restored** here.
@@ -305,7 +308,7 @@ class RAMProfileMap:
         After the function is called. RAM mode is STILL active. Commit RAM
         disable by calling commit_disable() after.
         """
-        for dds, _ in self.ram_profile_map:
+        for dds, _ in self._ram_profile_map:
             # Disable RAM and OSK.
             # Single-tone profiles use the profile registers for amplitude
             # control. The state of the OSK does not impact the logic here.
@@ -321,7 +324,7 @@ class RAMProfileMap:
         # End RAM mode using the same profile switch update.
         # This is achieved by invoking SPI transactions in the same timestamp.
         now = now_mu()
-        for cpld in self.cplds:
+        for cpld in self._cplds:
             at_mu(now)
             cpld.set_profile(7)
         # The timeline advancement of SPI is **naturally restored** here.
