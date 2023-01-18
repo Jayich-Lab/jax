@@ -219,13 +219,13 @@ class RAMProfileMap:
         It initializes the RAM content and profiles.
 
         Timing: (Figures generated using Kasli 2.0, 1024 RAM entries, 1 DDS)
-            The entire write_ram() call is measured to have taken ~600 us
+            The entire load_ram() call is measured to have taken ~620 us
             (omitting the wasted cycles due to the RTIO FIFO being filled up).
             The difference between the RTIO timestamp cursor and the RTIO
             counter (slack) reduced by ~50 us (with the same omission).
 
             The omission was applied since providing excessive slack will only
-            result in wasted clock cycles. write_ram() will hang and waste
+            result in wasted clock cycles. load_ram() will hang and waste
             clock cycles if the RTIO FIFO is saturated. No more RTIO events
             could be submitted until some of these events are executed, which
             frees up the FIFO.
