@@ -137,31 +137,30 @@ class RAMProfile:
         self.ftw, self.pow, self.asf = 0, 0, 0x3fff
 
         # Encode the FTW, POW, ASF, and raw data en masse
-        match ram_type:
-            case RAMType.FREQ:
-                self.dest = RAM_DEST_FTW
-                dds.frequency_to_ram(data, ram)
-                self.asf = dds.amplitude_to_asf(base_amplitude)
-                self.pow = dds.turns_to_pow(base_phase)
-            case RAMType.PHASE:
-                self.dest = RAM_DEST_POW
-                dds.turns_to_ram(data, ram)
-                self.ftw = dds.frequency_to_ftw(base_frequency)
-                self.asf = dds.amplitude_to_asf(base_amplitude)
-            case RAMType.AMP:
-                self.dest = RAM_DEST_ASF
-                dds.amplitude_to_ram(data, ram)
-                self.ftw = dds.frequency_to_ftw(base_frequency)
-                self.pow = dds.turns_to_pow(base_phase)
-            case RAMType.POLAR:
-                self.dest = RAM_DEST_POWASF
-                # Unpack the list of tuples into tuples
-                # Zip it again to convert it into 2 lists
-                phase, amp = zip(*data)
-                dds.turns_amplitude_to_ram(phase, amp, ram)
-                self.ftw = dds.frequency_to_ftw(base_frequency)
-            case _:
-                raise NotImplementedError
+        if ram_type == RAMType.FREQ:
+            self.dest = RAM_DEST_FTW
+            dds.frequency_to_ram(data, ram)
+            self.asf = dds.amplitude_to_asf(base_amplitude)
+            self.pow = dds.turns_to_pow(base_phase)
+        elif ram_type == RAMType.PHASE:
+            self.dest = RAM_DEST_POW
+            dds.turns_to_ram(data, ram)
+            self.ftw = dds.frequency_to_ftw(base_frequency)
+            self.asf = dds.amplitude_to_asf(base_amplitude)
+        elif ram_type == RAMType.AMP:
+            self.dest = RAM_DEST_ASF
+            dds.amplitude_to_ram(data, ram)
+            self.ftw = dds.frequency_to_ftw(base_frequency)
+            self.pow = dds.turns_to_pow(base_phase)
+        elif ram_type == RAMType.POLAR:
+            self.dest = RAM_DEST_POWASF
+            # Unpack the list of tuples into tuples
+            # Zip it again to convert it into 2 lists
+            phase, amp = zip(*data)
+            dds.turns_amplitude_to_ram(phase, amp, ram)
+            self.ftw = dds.frequency_to_ftw(base_frequency)
+        else:
+            raise NotImplementedError
 
         self.start_addr = 0
         self.end_addr = len(ram) - 1    # Inclusive
