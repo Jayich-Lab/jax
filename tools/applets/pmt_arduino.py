@@ -167,7 +167,7 @@ class PMTArduino(QtWidgets.QWidget, JaxApplet):
         print("PMT file half full")
 
     def _auto_new_file(self, signal, value):
-        print("New PMT file automatically created.")
+        print("New PMTArduino file automatically created.")
 
     def _on_start_and_stop(self, signal, value):
         self._set_pmt_state(value)
@@ -221,8 +221,8 @@ class PMTArduino(QtWidgets.QWidget, JaxApplet):
 
 
 def main():
-    applet = SimpleApplet(PMT)
-    PMT.add_labrad_ip_argument(applet)  # adds IP address as an argument.
+    applet = SimpleApplet(PMTArduino)
+    PMTArduino.add_labrad_ip_argument(applet)  # adds IP address as an argument.
     applet.run()
 
 
