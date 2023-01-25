@@ -1,11 +1,9 @@
-from artiq.experiment import kernel
-from artiq.coredevice.ad9910 import RAM_DEST_FTW, RAM_DEST_POW, RAM_DEST_ASF, \
-    RAM_DEST_POWASF
-import numpy as np
 from enum import Enum
 
-
-__all__ = ["AD9910RAM"]
+import numpy as np
+from artiq.coredevice.ad9910 import (RAM_DEST_ASF, RAM_DEST_FTW, RAM_DEST_POW,
+                                     RAM_DEST_POWASF)
+from artiq.experiment import kernel
 
 
 class RAMType(Enum):
