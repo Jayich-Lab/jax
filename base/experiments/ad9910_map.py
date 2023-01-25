@@ -203,11 +203,11 @@ class AD9910Manager:
                          osk_enable=cfg.osk_enable)
             # Unfortunately ARTIQ does not expose everything on CFR2
             dds.write32(ad9910._AD9910_REG_CFR2,
-                        (1 << ENABLE_SINGLE_TONE_ASF) |
-                        (cfg.drg_destination << DRG_DEST) |
-                        (cfg.drg_enable << DRG_ENABLE) |
-                        (1 << READ_EFFECTIVE_FTW) |
-                        (1 << MATCHED_LATENCY_ENABLE))
+                        (1 << ENABLE_SINGLE_TONE_ASF)
+                        | (cfg.drg_destination << DRG_DEST)
+                        | (cfg.drg_enable << DRG_ENABLE)
+                        | (1 << READ_EFFECTIVE_FTW)
+                        | (1 << MATCHED_LATENCY_ENABLE))
 
     @kernel
     def commit_enable(self):
