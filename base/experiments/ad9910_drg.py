@@ -21,22 +21,33 @@ class DRGType(Enum):
 class DRG:
     """Digital Ramp Generator (DRG).
 
-    The Digital Ramp Generator(DRG) is a module that generates a ramp of a DDS parameter (frequency/
-    amplitude/phase). First, the DRG initializes the parameter at a user-defined starting point. At
-    an user-defined time interval, the DRG increments the DDS parameter until it reaches the user-
-    specified limit (elaborated below).
+    The Digital Ramp Generator (DRG) is a module that generates a positive ramp of a DDS parameter
+    (frequency/amplitude/phase). First, the DRG initializes the parameter at a user-defined
+    starting point. At an user-defined time interval, the DRG increments the DDS parameter until it
+    reaches the user-specified limit (elaborated below).
 
     However, since ARTIQ does not support DRG operations, and the CPLD logic fixes DRG to decrement
     the DDS parameters, we use the workaround currently in the ARTIQ codebase.
 
     Link to workaround code: See #72.
 
-    It leads to an edge case behavior when the DRG accumulator exceeds the upper limit. If the
-    accumulator also reaches/exceeds the lower limit (by overflowing), the DRG accumulator will
-    reset to lower limit (dwell_high=False) instead of staying at the upper limit (dwell_high=True).
+    The workaround allows the generation of positive ramp ONLY by overflowing registers. After
+    reaching the upper limit (`end`), the DRG stays at a fixed level until the DRG is reset (see
+    `dwell_high` explanations below for more details). Hence, only unidirectional positive ramp is
+    supported.
+
+    Note: Enabling DRG bidirectional sweep will require both Urukul CPLD and ARTIQ gateware
+    developments, such that the direction pin (DRCTL) can be controlled by ARTIQ. It should either
+    be indirect control (through CPLD register, high timing overhead) or direct control (ARTIQ TTL
+    modules, like RF switches).
+
+    The workaround leads to an edge case behavior when the DRG accumulator exceeds the upper limit.
+    If the accumulator also reaches/exceeds the lower limit (by overflowing), the DRG accumulator
+    will reset to lower limit (dwell_high=False) instead of staying at the upper limit (dwell_high=
+    True).
 
     In terms of the DRG API, the waveform stalls at `end` if `dwell_high` is True, and `start`-
-    "step gap" if `dwell_high` is false.
+    "step gap" if `dwell_high` is False.
 
     Note: "step gap" refers to the difference between the value of each step. For example, consider
     an amplitude DRG. start=0.1, end=0.9, num_of_steps=9. "step size" in high level sense would be
