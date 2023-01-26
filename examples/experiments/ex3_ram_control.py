@@ -1,8 +1,9 @@
-from artiq.experiment import *
-from artiq.coredevice.ad9910 import *
-from jax import SinaraEnvironment, RAMType, RAMProfile, RAMProfileMap, JaxExperiment
 import numpy as np
+from artiq.coredevice.ad9910 import *
+from artiq.experiment import *
 
+from jax import (AD9910Manager, JaxExperiment, RAMProfile, RAMType,
+                 SinaraEnvironment)
 
 # __all__ in an experiment module should typically only include the experiment class.
 # Specially, it cannot include the base experiment class.

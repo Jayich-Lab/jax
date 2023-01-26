@@ -1,7 +1,7 @@
-from ad9910_drg import DRG, DRGMap, DRGType
-from ad9910_ram import RAMProfile, RAMProfileMap, RAMType
 from artiq.coredevice import ad9910
 from artiq.experiment import kernel
+
+from jax import DRG, DRGMap, DRGType, RAMProfile, RAMProfileMap, RAMType
 
 
 class AD9910Manager:
