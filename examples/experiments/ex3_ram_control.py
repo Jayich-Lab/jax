@@ -60,10 +60,14 @@ class RAM(JaxExperiment, SinaraEnvironment):
             self.dds3, polar, 400*ns, RAMType.POLAR, RAM_MODE_CONT_RAMPUP)
 
         self.dds_manager = AD9910Manager(self.core)
-        self.dds_manager.append(self.dds0, frequency_src=100*MHz, amplitude_src=ram_profile0)
-        self.dds_manager.append(self.dds1, frequency_src=ram_profile1, amplitude_src=1.0)
-        self.dds_manager.append(self.dds2, frequency_src=100*MHz, phase_src=ram_profile2, amplitude_src=1.0)
-        self.dds_manager.append(self.dds3, frequency_src=100*MHz, phase_src=ram_profile3, amplitude_src=ram_profile3)
+        self.dds_manager.append(
+            self.dds0, frequency_src=100*MHz, amplitude_src=ram_profile0)
+        self.dds_manager.append(
+            self.dds1, frequency_src=ram_profile1, amplitude_src=1.0)
+        self.dds_manager.append(
+            self.dds2, frequency_src=100*MHz, phase_src=ram_profile2, amplitude_src=1.0)
+        self.dds_manager.append(
+            self.dds3, frequency_src=100*MHz, phase_src=ram_profile3, amplitude_src=ram_profile3)
 
     @kernel
     def init_dds(self, dds):
