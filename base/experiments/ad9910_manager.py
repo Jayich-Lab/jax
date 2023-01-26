@@ -54,10 +54,16 @@ class AD9910Manager:
                 self.drg_destination = 0
                 self.drg_enable = 0
 
-            self.osk_enable = 0
-            if (ram_profile is not None) and (drg is not None):
-                if drg.drg_type != DRGType.AMP and ram_profile.ram_type != RAMType.AMP:
-                    self.osk_enable = 1
+            self.osk_enable = 1
+            # OSK is never needed if RAM is disabled.
+            if not self.ram_enable:
+                self.osk_enable = 0
+            # Disable OSK to avoid overriding RAM with amplitude destination
+            elif ram_profile.ram_type in [RAMType.AMP, RAMType.POLAR]:
+                self.osk_enable = 0
+            # Disable OSK to avoid overriding amplitude DRG
+            elif (drg is not None) and drg.drg_type == DRGType.AMP:
+                self.osk_enable = 0
 
     def append(self, dds, frequency_src=0.0, phase_src=0.0, amplitude_src=1.0):
         """Append a AD9910 profile.
