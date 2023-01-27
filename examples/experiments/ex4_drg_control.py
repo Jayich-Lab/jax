@@ -14,9 +14,9 @@ __all__ = ["DRGExample"]
 class DRGExample(JaxExperiment, SinaraEnvironment):
     """Example experiment generating several DDS waveform, controlled by the AD9910 DRG.
 
-    The following repetitive waveform are generated:
+    The following waveform are generated:
     - Channel 0: Frequency sweep-up. Increasing DDS frequency from 1 MHz to 10 MHz. The frequency
-        increments 1 MHz every step.
+        increments 1 MHz every step. The frequency will stay at 10 MHz after reaching it.
     - Channel 1: Amplitude sweep-up. Increasing DDS amplitude scaling factor (ASF) from 0.01 to 1.0.
         The ASF increments by 0.01 every step. The ASF will reset to 0 after reaching 1.0.
     - Channel 2: Amplitude sweep-up. Increasing DDS amplitude scaling factor (ASF) from 0.01 to
