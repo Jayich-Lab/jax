@@ -50,7 +50,7 @@ class DRG:
     "step gap" if `dwell_high` is False.
 
     Note: "step gap" refers to the difference between the value of each step. For example, consider
-    an amplitude DRG. start=0.1, end=0.9, num_of_steps=9. "step size" in high level sense would be
+    an amplitude DRG. start=0.1, end=0.9, num_of_steps=9. "step gap" in high level sense would be
     0.1. Note that this class performs such calculation in machine units instead of user arguments
     for the sake of correctness.
 
