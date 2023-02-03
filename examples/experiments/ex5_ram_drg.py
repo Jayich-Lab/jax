@@ -18,7 +18,7 @@ class RAMDRGExample(JaxExperiment, SinaraEnvironment):
 
     The following waveform are generated:
     - Channel 0: DRG frequency sweep-up with a bidirectional amplitude RAM. The frequency increases
-        from 11 MHz to 36 Mhz, with 1 MHz increment every step; The ASF first sweeps-up from 0.1 to
+        from 11 MHz to 36 MHz, with 1 MHz increment every step; The ASF first sweeps-up from 0.1 to
         1.0, then sweeps-down back to 0.1. RAM and DRG update at roughly the same time.
         Note: See Data Latency (Pipeline Latency) Table in the Specification section of the AD9910
         datasheet.
