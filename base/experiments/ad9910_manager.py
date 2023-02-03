@@ -71,7 +71,9 @@ class AD9910Manager:
         An AD9910 profile may or may not use the RAM or the DRG. If RAM profile is not specified,
         a single-tone profile will be configured instead.
 
-        The DDS profile will be always loaded to profile 0.
+        The DDS settings supplied from the parameters will be always loaded to the profile 0 of the
+        specified DDS. This includes everything about the DDS, e.g. using RAM profile, DRG,
+        configuration register values, etc.).
 
         Args:
             dds: AD9910, the DDS that will playback the profile.
