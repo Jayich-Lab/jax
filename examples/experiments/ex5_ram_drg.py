@@ -26,7 +26,7 @@ class RAMDRGExample(JaxExperiment, SinaraEnvironment):
         alternates from 0 to pi every step.
     - Channel 2: Amplitude sweep-up then sweep down, identical to channel 0 and 1. A pi phase
         offset is gradually injected into the waveform. 10 MHz in frequency.
-    - Channel 3: Exact same waveform as Channel 1, but RAM and DRG updates are not aligned.
+    - Channel 3: Exact same waveform as Channel 0, but RAM and DRG updates are not aligned.
 
     To run this experiment, you need to run the "artiq" labrad server.
     Change the DDSes and Urukul CPLDs to use different Urukuls and different RF channels.
