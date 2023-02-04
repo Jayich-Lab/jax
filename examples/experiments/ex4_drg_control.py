@@ -42,14 +42,15 @@ class DRGExample(JaxExperiment, SinaraEnvironment):
         super().prepare()  # Calls JaxExperiment.prepare(), which calls SinaraEnvironment.prepare()
 
         # The DRG waveform instances.
-        drg_freq = DRG(self.dds0, 1*MHz, 10*MHz, 10, 400*ns, DRGType.FREQ)
-        drg_amp_no_dwell_high = DRG(self.dds1, 0.01, 1.0, 100, 80*ns, DRGType.AMP,
-                                    dwell_high=False)
+        drg_freq = DRG(self.dds0, 1*MHz, 10*MHz, 400*ns, DRGType.FREQ, num_of_steps=10)
+        drg_amp_no_dwell_high = DRG(self.dds1, 0.01, 1.0, 80*ns, DRGType.AMP,
+                                    num_of_steps=100, dwell_high=False)
         # Note: See dwell_high default value.
-        drg_amp_dwell_high = DRG(self.dds2, 0.01, 0.99, 99, 80*ns, DRGType.AMP)
+        drg_amp_dwell_high = DRG(self.dds2, 0.01, 0.99, 80*ns, DRGType.AMP, num_of_steps=99)
 
         # Number of updates = DRG duration / update period
-        drg_phase = DRG(self.dds3, 0.5 / (10000 / 4), 0.5, 10000//4, 4*ns, DRGType.PHASE)
+        drg_phase = DRG(self.dds3, 0.5 / (10000 / 4), 0.5, 4*ns, DRGType.PHASE,
+                        num_of_steps=10000//4)
 
         self.dds_manager = AD9910Manager(self.core)
 

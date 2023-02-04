@@ -57,10 +57,11 @@ class RAMDRGExample(JaxExperiment, SinaraEnvironment):
                                      polar, 400*ns, RAMType.POLAR, RAM_MODE_CONT_BIDIR_RAMP)
 
         # Linear frequency ramp-up from 11 MHz to 36 MHz.
-        drg_freq = DRG(self.dds0, 11*MHz, 36*MHz, 25, 400*ns, DRGType.FREQ)
+        drg_freq = DRG(self.dds0, 11*MHz, 36*MHz, 400*ns, DRGType.FREQ, num_of_steps=25)
 
         # Number of updates = DRG duration / update period
-        drg_phase = DRG(self.dds2, 0.5 / (10000 / 4), 0.5, 10000//4, 4*ns, DRGType.PHASE)
+        drg_phase = DRG(self.dds2, 0.5 / (10000 / 4), 0.5, 4*ns, DRGType.PHASE,
+                        num_of_steps=10000//4)
 
         # Another amplitude bidirectional RAM profile, but with higher DRG update frequency.
         finer_amp = np.linspace(0.1, 1.0, num=16).tolist()

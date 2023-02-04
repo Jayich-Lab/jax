@@ -68,17 +68,27 @@ class DRG:
             be at least a "step gap" above 0.
         end: float, the final value of the DDS parameter (frequency/amplitude/phase).
             If dwell_high=True, DRG will generate `start` - "step gap" after this value.
-        num_of_steps: int, the number of steps in the DRG.
         ramp_interval: float, the time interval between each step of the DRG playback. Keep the
             interval at a multiple of 4*T_sysclk (4*1 ns).
         drg_type: DRGType, the type of DRG.
+        num_of_steps: int, the number of steps in the DRG if specified. Exactly ONE of `num_of_step`
+            and `ramp_step` should be specified. Defaults to None.
+        step_gap: float or string, the specification of the difference between the value of each
+            step of the DRG. It takes one of the following 3 forms:
+            1. The specific step gap (i.e. the increment of value per ramp interval) as float.
+            2. The string "fine" to specify smallest step gap for the specific parameter.
+            3. None (default). The ramp step is not specified.
+            Exactly ONE of `num_of_step` and `step_gap` should be specified. Defaults to None.
         dwell_high: bool, the DDS parameter will stall at `end` if True. This parameter is mainly
             to check the user's understanding of the dwell high condition. Defaults to True.
 
     Raises:
         ValueError: Invalid DRG parameters.
     """
-    def __init__(self, dds, start, end, num_of_steps, ramp_interval, drg_type, dwell_high=True):
+    def __init__(self, dds, start, end, ramp_interval, drg_type,
+                 num_of_steps=None, step_gap=None, dwell_high=True):
+        if (num_of_steps is not None) == (step_gap is not None):
+            raise ValueError("num_of_step and step_gap are both specified or unspecified")
         self.dest = drg_type.value
         self.rate = int(ramp_interval * dds.sysclk / 4.0)
 
@@ -87,6 +97,15 @@ class DRG:
         if drg_type == DRGType.FREQ:
             start_mu = dds.frequency_to_ftw(start).astype('uint32')
             self.high = dds.frequency_to_ftw(end).astype('uint32')
+
+            if step_gap is not None:
+                if step_gap == "fine":
+                    # Both DRG accuumlator and FTW have 32-bits resolution.
+                    # DDS core fully reflects the DRG resolution.
+                    self.step = np.uint32(1)
+                else:
+                    self.step = dds.frequency_to_ftw(step_gap).astype('uint32')
+
         elif drg_type == DRGType.PHASE:
             # DRG registers are 32-bits. POW register is 16-bits.
             # Using turns_to_pow will result in the loss of precision in DRG step.
@@ -98,6 +117,15 @@ class DRG:
 
             start_mu = _turns_to_drg_args(start)
             self.high = _turns_to_drg_args(end)
+
+            if step_gap is not None:
+                if step_gap == "fine":
+                    # DRG has 32-bits resolution, but POW only has 16.
+                    # Only the most-significant 16-bits can reach the DDS core.
+                    self.step = np.uint32(1 << 16)
+                else:
+                    self.step = _turns_to_drg_args(step_gap).astype('uint32')
+
         elif drg_type == DRGType.AMP:
             # DRG registers are 32-bits. ASF field in the ASF register is 14-bits.
             # Using amplitude_to_asf will result in the loss of precision in DRG step.
@@ -110,13 +138,23 @@ class DRG:
 
             start_mu = _amplitude_to_drg_regs(start)
             self.high = _amplitude_to_drg_regs(end)
+
+            if step_gap is not None:
+                if step_gap == "fine":
+                    # DRG has 32-bits resolution, but ASF only has 14.
+                    # Only the most-significant 18-bits can reach the DDS core.
+                    self.step = np.uint32(1 << 18)
+                else:
+                    self.step = _turns_to_drg_args(step_gap).astype('uint32')
+
         else:
             raise ValueError("Invalid DRG type argument")
 
         if self.high <= start_mu:
             raise ValueError("Upper limit of DRG must be higher than the lower limit of DRG")
 
-        self.step = (self.high - start_mu)//(num_of_steps - 1)
+        if num_of_steps is not None:
+            self.step = (self.high - start_mu)//(num_of_steps - 1)
 
         # Verify dwell high condition.
         if dwell_high != ((self.high + self.step) < 2**32):
