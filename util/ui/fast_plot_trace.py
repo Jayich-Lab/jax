@@ -3,7 +3,7 @@ import pyqtgraph as _pg
 from PyQt5 import QtCore
 
 
-class _PlotPath(_pg.QtGui.QGraphicsPathItem):
+class _PlotPath(_pg.QtWidgets.QGraphicsPathItem):
     """Generates a path for x-y plotting data.
 
     Replaces the expensive work of plotting data by plotting a path. When plotting a large dataset,
