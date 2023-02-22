@@ -145,7 +145,7 @@ class DRG:
                     # Only the most-significant 18-bits can reach the DDS core.
                     self.step = np.uint32(1 << 18)
                 else:
-                    self.step = _turns_to_drg_args(step_gap).astype('uint32')
+                    self.step = _amplitude_to_drg_regs(step_gap).astype('uint32')
 
         else:
             raise ValueError("Invalid DRG type argument")
