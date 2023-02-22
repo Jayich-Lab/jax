@@ -42,6 +42,7 @@ class DRGExample(JaxExperiment, SinaraEnvironment):
         super().prepare()  # Calls JaxExperiment.prepare(), which calls SinaraEnvironment.prepare()
 
         # The DRG waveform instances.
+        # Specify step_gap="fine" and unspecify `num_of_steps` to minimize the step gap.
         drg_freq = DRG(self.dds0, 1*MHz, 10*MHz, 400*ns, DRGType.FREQ, num_of_steps=10)
         drg_amp_no_dwell_high = DRG(self.dds1, 0.01, 1.0, 80*ns, DRGType.AMP,
                                     num_of_steps=100, dwell_high=False)
