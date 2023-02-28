@@ -141,6 +141,7 @@ class PMTArduino(QtWidgets.QWidget, JaxApplet):
         self.cxn.add_on_disconnect("vault", self.vault_disconnected)
 
     def setup_gui_listeners(self):
+        self.number.overflow.connect(self.number_overflow)
         self.start_button.toggled.connect(self.start_button_toggled)
         self.mode_combobox.currentTextChanged.connect(self.mode_combobox_text_changed)
         self.interval_spinbox.valueChanged.connect(self.interval_spinbox_value_changed)
@@ -167,7 +168,7 @@ class PMTArduino(QtWidgets.QWidget, JaxApplet):
         print("PMT file half full")
 
     def _auto_new_file(self, signal, value):
-        print("New PMTArduino file automatically created.")
+        print("New PMT_Arduino file automatically created.")
 
     def _on_start_and_stop(self, signal, value):
         self._set_pmt_state(value)
@@ -196,6 +197,9 @@ class PMTArduino(QtWidgets.QWidget, JaxApplet):
         else:
             self.start_button.setText("Start")
         self.start_button.blockSignals(False)
+
+    def number_overflow(self):
+        self.number.display("OUFL")
 
     def start_button_toggled(self, checked):
         async def _start_button_toggled(self, checked):
