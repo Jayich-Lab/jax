@@ -1,8 +1,9 @@
-from artiq.experiment import *
-from artiq.coredevice.ad9910 import *
-from jax import SinaraEnvironment, RAMType, RAMProfile, RAMProfileMap, JaxExperiment
 import numpy as np
+from artiq.coredevice.ad9910 import *
+from artiq.experiment import *
 
+from jax import (AD9910Manager, JaxExperiment, RAMProfile, RAMType,
+                 SinaraEnvironment)
 
 # __all__ in an experiment module should typically only include the experiment class.
 # Specially, it cannot include the base experiment class.
@@ -50,23 +51,23 @@ class RAM(JaxExperiment, SinaraEnvironment):
         polar = list(zip(phase, amp))
 
         ram_profile0 = RAMProfile(
-            self.dds0, amp, 400*ns, RAMType.AMP, RAM_MODE_CONT_RAMPUP,
-            base_frequency=100*MHz)
+            self.dds0, amp, 400*ns, RAMType.AMP, RAM_MODE_CONT_RAMPUP)
         ram_profile1 = RAMProfile(
-            self.dds1, freq, 400*ns, RAMType.FREQ, RAM_MODE_CONT_RAMPUP,
-            base_amplitude=1.0)
+            self.dds1, freq, 400*ns, RAMType.FREQ, RAM_MODE_CONT_RAMPUP)
         ram_profile2 = RAMProfile(
-            self.dds2, phase, 400*ns, RAMType.PHASE, RAM_MODE_CONT_RAMPUP,
-            base_frequency=100*MHz, base_amplitude=1.0)
+            self.dds2, phase, 400*ns, RAMType.PHASE, RAM_MODE_CONT_RAMPUP)
         ram_profile3 = RAMProfile(
-            self.dds3, polar, 400*ns, RAMType.POLAR, RAM_MODE_CONT_RAMPUP,
-            base_frequency=100*MHz, base_amplitude=1.0)
+            self.dds3, polar, 400*ns, RAMType.POLAR, RAM_MODE_CONT_RAMPUP)
 
-        self.profile_map = RAMProfileMap(self.core)
-        self.profile_map.append(self.dds0, ram_profile0)
-        self.profile_map.append(self.dds1, ram_profile1)
-        self.profile_map.append(self.dds2, ram_profile2)
-        self.profile_map.append(self.dds3, ram_profile3)
+        self.dds_manager = AD9910Manager(self.core)
+        self.dds_manager.append(
+            self.dds0, frequency_src=100*MHz, amplitude_src=ram_profile0)
+        self.dds_manager.append(
+            self.dds1, frequency_src=ram_profile1, amplitude_src=1.0)
+        self.dds_manager.append(
+            self.dds2, frequency_src=100*MHz, phase_src=ram_profile2, amplitude_src=1.0)
+        self.dds_manager.append(
+            self.dds3, frequency_src=100*MHz, phase_src=ram_profile3, amplitude_src=ram_profile3)
 
     @kernel
     def init_dds(self, dds):
@@ -98,7 +99,7 @@ class RAM(JaxExperiment, SinaraEnvironment):
         for dds in [self.dds0, self.dds1, self.dds2, self.dds3]:
             dds.set(frequency=5*MHz, amplitude=0.2)
 
-        self.profile_map.load_ram()
+        self.dds_manager.load_profile()
 
         # DDS output sequence:
         # 1. RAM profiles for 10 us
@@ -106,22 +107,22 @@ class RAM(JaxExperiment, SinaraEnvironment):
         # 3. RAM profiles for another 10 us
         # 4. Single-tone profiles until reset
 
-        self.profile_map.enable()
+        self.dds_manager.enable()
         # Record time right before commit
         now = now_mu()
-        self.profile_map.commit_enable()
-        self.profile_map.disable()
+        self.dds_manager.commit_enable()
+        self.dds_manager.disable()
 
         now += self.core.seconds_to_mu(10*us)
         at_mu(now)
-        self.profile_map.commit_disable()
-        self.profile_map.enable()
+        self.dds_manager.commit_disable()
+        self.dds_manager.enable()
 
         now += self.core.seconds_to_mu(10*us)
         at_mu(now)
-        self.profile_map.commit_enable()
-        self.profile_map.disable()
+        self.dds_manager.commit_enable()
+        self.dds_manager.disable()
 
         now += self.core.seconds_to_mu(10*us)
         at_mu(now)
-        self.profile_map.commit_disable()
+        self.dds_manager.commit_disable()
