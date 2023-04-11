@@ -22,7 +22,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     REPUMP_AOM_TTL_CHANNELS = None
     PMT_EDGECOUNTER = None
     kernel_invariants = {
-        "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms", "pmt_counter", "ad9910s",
+        "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms_dds", "repump_aoms_ttl", "pmt_counter", "ad9910s",
         "ttl_outs"
     }
 
@@ -221,7 +221,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             else:
                 device.sw.off()
             if index_repump >= 0:
-                self.repump_aom_states[index_repump] = value
+                self.repump_aom_dds_states[index_repump] = value
             self.core.break_realtime()
 
     @kernel(flags={"fast-math"})
