@@ -23,7 +23,8 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     REPUMP_AOM_TTL_CHANNELS = None
     PMT_EDGECOUNTER = None
     kernel_invariants = {
-        "REPUMP_AOM_CHANNELS",
+        "REPUMP_AOM_DDS_CHANNELS",
+        "REPUMP_AOM_TTL_CHANNELS",
         "PMT_EDGECOUNTER",
         "repump_aoms_dds",
         "repump_aoms_ttl",
@@ -39,12 +40,18 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
         if self.REPUMP_AOM_DDS_CHANNELS is None and self.REPUMP_AOM_TTL_CHANNELS is None:
             raise Exception("REPUMP_AOM_DDS_CHANNELS or REPUMP_AOM_TTL_CHANNELS must be defined.")
-        self.repump_aoms_dds = [
-            self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS
-        ]
-        self.repump_aoms_ttl = [
-            self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS
-        ]
+        if self.REPUMP_AOM_DDS_CHANNELS is not None:
+            self.repump_aoms_dds = [
+                self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS
+            ]
+        else:
+            self.repump_aoms_dds = []
+        if self.REPUMP_AOM_TTL_CHANNELS is not None:
+            self.repump_aoms_ttl = [
+                self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS
+            ]
+        else:
+            self.repump_aoms_ttl = []
         if self.PMT_EDGECOUNTER is None:
             raise Exception("PMT_EDGECOUNTER must be defined.")
         self.pmt_counter = self.get_device(self.PMT_EDGECOUNTER)
@@ -105,21 +112,25 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self.core.break_realtime()
 
         if differential_mode:
-            for kk in range(len(self.repump_aoms_dds)):
-                # if the repump AOM is off, don't turn on and off the AOM.
-                # the repump AOM stays off for both differential high and low counting periods.
-                if self.repump_aom_dds_states[kk] > 0.0:
-                    self.repump_aoms_dds[kk].sw.off()
-            for kk in range(len(self.repump_aoms_ttl)):
-                self.repump_aoms_ttl[kk].off()
+            if len(self.repump_aoms_dds) != 0:
+                for kk in range(len(self.repump_aoms_dds)):
+                    # if the repump AOM is off, don't turn on and off the AOM.
+                    # the repump AOM stays off for both differential high and low counting periods.
+                    if self.repump_aom_dds_states[kk] > 0.0:
+                        self.repump_aoms_dds[kk].sw.off()
+            if len(self.repump_aoms_ttl) != 0:
+                for kk in range(len(self.repump_aoms_ttl)):
+                    self.repump_aoms_ttl[kk].off()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
             at_mu(t_count + self.rtio_cycle_mu)
-            for kk in range(len(self.repump_aoms_dds)):
-                if self.repump_aom_dds_states[kk] > 0.0:
-                    self.repump_aoms_dds[kk].sw.on()
-            for kk in range(len(self.repump_aoms_ttl)):
-                self.repump_aoms_ttl[kk].on()
+            if len(self.repump_aoms_dds) != 0:
+                for kk in range(len(self.repump_aoms_dds)):
+                    if self.repump_aom_dds_states[kk] > 0.0:
+                        self.repump_aoms_dds[kk].sw.on()
+            if len(self.repump_aoms_ttl) != 0:
+                for kk in range(len(self.repump_aoms_ttl)):
+                    self.repump_aoms_ttl[kk].on()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
         else:
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
