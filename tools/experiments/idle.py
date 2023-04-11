@@ -18,12 +18,18 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
     This experiment assumes that the device has at least one AD9910 DDS and at least one TTL board.
     """
+
     REPUMP_AOM_DDS_CHANNELS = None
     REPUMP_AOM_TTL_CHANNELS = None
     PMT_EDGECOUNTER = None
     kernel_invariants = {
-        "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms_dds", "repump_aoms_ttl", "pmt_counter", "ad9910s",
-        "ttl_outs"
+        "REPUMP_AOM_CHANNELS",
+        "PMT_EDGECOUNTER",
+        "repump_aoms_dds",
+        "repump_aoms_ttl",
+        "pmt_counter",
+        "ad9910s",
+        "ttl_outs",
     }
 
     def build(self):
@@ -33,10 +39,14 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
         if self.REPUMP_AOM_DDS_CHANNELS is None:
             raise Exception("REPUMP_AOM_DDS_CHANNELS must be defined.")
-        self.repump_aoms_dds = [self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS]
+        self.repump_aoms_dds = [
+            self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS
+        ]
         if self.REPUMP_AOM_TTL_CHANNELS is None:
             raise Exception("REPUMP_AOM_TTL_CHANNELS must be defined.")
-        self.repump_aoms_ttl = [self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS]
+        self.repump_aoms_ttl = [
+            self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS
+        ]
         if self.PMT_EDGECOUNTER is None:
             raise Exception("PMT_EDGECOUNTER must be defined.")
         self.pmt_counter = self.get_device(self.PMT_EDGECOUNTER)
@@ -100,7 +110,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             for kk in range(len(self.repump_aoms_dds)):
                 # if the repump AOM is off, don't turn on and off the AOM.
                 # the repump AOM stays off for both differential high and low counting periods.
-                if self.repump_aom_dds_states[kk] > 0.:
+                if self.repump_aom_dds_states[kk] > 0.0:
                     self.repump_aoms_dds[kk].sw.off()
             for kk in range(len(self.repump_aoms_ttl)):
                 self.repump_aoms_ttl[kk].off()
@@ -108,7 +118,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
             at_mu(t_count + self.rtio_cycle_mu)
             for kk in range(len(self.repump_aoms_dds)):
-                if self.repump_aom_dds_states[kk] > 0.:
+                if self.repump_aom_dds_states[kk] > 0.0:
                     self.repump_aoms_dds[kk].sw.on()
             for kk in range(len(self.repump_aoms_ttl)):
                 self.repump_aoms_ttl[kk].on()
@@ -116,7 +126,9 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         else:
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
-        twenty_ms_mu = 20 * ms  # 20 ms time slack to prevent slowing down PMT acquisition.
+        twenty_ms_mu = (
+            20 * ms
+        )  # 20 ms time slack to prevent slowing down PMT acquisition.
         while t_count > now_mu() + twenty_ms_mu:
             self.update_hardware()
 
@@ -159,7 +171,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
                 determine whether repump AOMs should be turned on in the differential mode.
         """
         dds_changes = self.cxn.artiq.get_dds_change_queues()
-        to_kernel = [(-1, -1, "placeholder", 0.)]
+        to_kernel = [(-1, -1, "placeholder", 0.0)]
         for kk in dds_changes:
             index = self.devices.ad9910s.index(kk[0])
             try:
@@ -180,14 +192,16 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             TTL changes. The first element is always a placeholder.
         """
         ttl_changes = self.cxn.artiq.get_ttl_change_queues()
-        to_kernel = [(-1, 0.)]
+        to_kernel = [(-1, 0.0)]
         for kk in ttl_changes:
             index = self.devices.ttl_outs.index(kk[0])
             to_kernel.append((index, kk[1]))
         return to_kernel
 
     @kernel(flags={"fast-math"})
-    def update_dds(self, index: TInt32, index_repump: TInt32, attribute: TStr, value: TFloat):
+    def update_dds(
+        self, index: TInt32, index_repump: TInt32, attribute: TStr, value: TFloat
+    ):
         """Sets DDS value."""
         device = self.ad9910s[index]
         if attribute == "frequency":
@@ -215,7 +229,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
             device.set_att(value)
             self.core.break_realtime()
         elif attribute == "state":
-            is_on = value > 0.
+            is_on = value > 0.0
             if is_on:
                 device.sw.on()
             else:
@@ -228,7 +242,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     def update_ttl(self, index: TInt32, value: TFloat):
         """Sets TTL value."""
         device = self.ttl_outs[index]
-        if value > 0.:
+        if value > 0.0:
             device.on()
         else:
             device.off()
@@ -253,6 +267,8 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     def save_counts(self, high: TInt32, low: TInt32 = 0):
         """Sends counts to the PMT server."""
         try:
-            self.cxn.pmt.save_counts(_t.time(), high / self.interval_ms, low / self.interval_ms)
+            self.cxn.pmt.save_counts(
+                _t.time(), high / self.interval_ms, low / self.interval_ms
+            )
         except Exception as e:
             pass
