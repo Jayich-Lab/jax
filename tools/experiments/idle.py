@@ -11,13 +11,15 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     """Base class for a background running experiment that reads PMT and sets TTL/DDS parameters.
 
     Inherit this class in the experiment repository and define the class variables:
-        REPUMP_AOM_CHANNELS: list of strs, names of DDSes controlling repump lasers.
+        REPUMP_AOM_DDS_CHANNELS: list of strs, names of DDSes controlling repump lasers.
             To control ions that have hyperfine structures, multiple repump DDSes may be necessary.
+        REPUMP_AOM__TTL_CHANNELS: list of strs, names of TTLs controlling repump lasers.
         PMT_EDGECOUNTER: str, edgecounter device for PMT input.
 
     This experiment assumes that the device has at least one AD9910 DDS and at least one TTL board.
     """
-    REPUMP_AOM_CHANNELS = None
+    REPUMP_AOM_DDS_CHANNELS = None
+    REPUMP_AOM_TTL_CHANNELS = None
     PMT_EDGECOUNTER = None
     kernel_invariants = {
         "REPUMP_AOM_CHANNELS", "PMT_EDGECOUNTER", "repump_aoms", "pmt_counter", "ad9910s",
@@ -29,9 +31,12 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         lowest_priority = -100  # we use priorities range from -100 to 100.
         self.set_default_scheduling(priority=lowest_priority, pipeline_name="main")
 
-        if self.REPUMP_AOM_CHANNELS is None:
-            raise Exception("REPUMP_AOM_CHANNELS must be defined.")
-        self.repump_aoms = [self.get_device(kk) for kk in self.REPUMP_AOM_CHANNELS]
+        if self.REPUMP_AOM_DDS_CHANNELS is None:
+            raise Exception("REPUMP_AOM_DDS_CHANNELS must be defined.")
+        self.repump_aoms_dds = [self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS]
+        if self.REPUMP_AOM_TTL_CHANNELS is None:
+            raise Exception("REPUMP_AOM_TTL_CHANNELS must be defined.")
+        self.repump_aoms_ttl = [self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS]
         if self.PMT_EDGECOUNTER is None:
             raise Exception("PMT_EDGECOUNTER must be defined.")
         self.pmt_counter = self.get_device(self.PMT_EDGECOUNTER)
@@ -74,9 +79,9 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         If a repump AOM is set to off, don't turn it on during the differential mode sequence.
         """
         dds_params = _p.loads(self.cxn.artiq.get_dds_parameters())
-        self.repump_aom_states = []
-        for kk in self.REPUMP_AOM_CHANNELS:
-            self.repump_aom_states.append(dds_params[kk][-1])
+        self.repump_aom_dds_states = []
+        for kk in self.REPUMP_AOM_DDS_CHANNELS:
+            self.repump_aom_dds_states.append(dds_params[kk][-1])
 
     @kernel
     def kernel_before_loops(self):
@@ -92,17 +97,21 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self.core.break_realtime()
 
         if differential_mode:
-            for kk in range(len(self.repump_aoms)):
+            for kk in range(len(self.repump_aoms_dds)):
                 # if the repump AOM is off, don't turn on and off the AOM.
                 # the repump AOM stays off for both differential high and low counting periods.
-                if self.repump_aom_states[kk] > 0.:
-                    self.repump_aoms[kk].sw.off()
+                if self.repump_aom_dds_states[kk] > 0.:
+                    self.repump_aoms_dds[kk].sw.off()
+            for kk in range(len(self.repump_aoms_ttl)):
+                self.repump_aoms_ttl[kk].off()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
             at_mu(t_count + self.rtio_cycle_mu)
-            for kk in range(len(self.repump_aoms)):
-                if self.repump_aom_states[kk] > 0.:
-                    self.repump_aoms[kk].sw.on()
+            for kk in range(len(self.repump_aoms_dds)):
+                if self.repump_aom_dds_states[kk] > 0.:
+                    self.repump_aoms_dds[kk].sw.on()
+            for kk in range(len(self.repump_aoms_ttl)):
+                self.repump_aoms_ttl[kk].on()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
         else:
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
