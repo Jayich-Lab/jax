@@ -124,7 +124,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
                         self.repump_aoms_dds[kk].sw.off()
             if self.USE_REPUMP_TTL:
                 for kk in range(len(self.repump_aoms_ttl)):
-                    self.repump_aoms_ttl[kk].off()
+                    self.repump_aoms_ttl[kk].on()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
             at_mu(t_count + self.rtio_cycle_mu)
@@ -134,7 +134,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
                         self.repump_aoms_dds[kk].sw.on()
             if self.USE_REPUMP_TTL:
                 for kk in range(len(self.repump_aoms_ttl)):
-                    self.repump_aoms_ttl[kk].on()
+                    self.repump_aoms_ttl[kk].off()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
         else:
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
