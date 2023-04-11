@@ -37,13 +37,11 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         lowest_priority = -100  # we use priorities range from -100 to 100.
         self.set_default_scheduling(priority=lowest_priority, pipeline_name="main")
 
-        if self.REPUMP_AOM_DDS_CHANNELS is None:
-            raise Exception("REPUMP_AOM_DDS_CHANNELS must be defined.")
+        if self.REPUMP_AOM_DDS_CHANNELS is None and self.REPUMP_AOM_TTL_CHANNELS is None:
+            raise Exception("REPUMP_AOM_DDS_CHANNELS or REPUMP_AOM_TTL_CHANNELS must be defined.")
         self.repump_aoms_dds = [
             self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS
         ]
-        if self.REPUMP_AOM_TTL_CHANNELS is None:
-            raise Exception("REPUMP_AOM_TTL_CHANNELS must be defined.")
         self.repump_aoms_ttl = [
             self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS
         ]
