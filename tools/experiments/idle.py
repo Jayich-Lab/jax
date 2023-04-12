@@ -13,7 +13,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     Inherit this class in the experiment repository and define the class variables:
         REPUMP_AOM_DDS_CHANNELS: list of strs, names of DDSes controlling repump lasers.
             To control ions that have hyperfine structures, multiple repump DDSes may be necessary.
-        REPUMP_AOM__TTL_CHANNELS: list of strs, names of TTLs controlling repump lasers.
+        REPUMP_AOM_TTL_CHANNELS: list of strs, names of TTLs controlling repump lasers.
         PMT_EDGECOUNTER: str, edgecounter device for PMT input.
 
     This experiment assumes that the device has at least one AD9910 DDS and at least one TTL board.
@@ -22,8 +22,6 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
     REPUMP_AOM_DDS_CHANNELS = None
     REPUMP_AOM_TTL_CHANNELS = None
     PMT_EDGECOUNTER = None
-    USE_REPUMP_DDS = True
-    USE_REPUMP_TTL = True
     kernel_invariants = {
         "REPUMP_AOM_DDS_CHANNELS",
         "REPUMP_AOM_TTL_CHANNELS",
@@ -42,16 +40,18 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
 
         if self.REPUMP_AOM_DDS_CHANNELS is None and self.REPUMP_AOM_TTL_CHANNELS is None:
             raise Exception("REPUMP_AOM_DDS_CHANNELS or REPUMP_AOM_TTL_CHANNELS must be defined.")
+        self.use_repump_dds = True
+        self.use_repump_ttl = True
         if self.REPUMP_AOM_DDS_CHANNELS is None:
             self.repump_aoms_dds = [self.get_device(self.devices.ad9910s[0])]
-            self.USE_REPUMP_DDS = False
+            self.use_repump_dds = False
         else:
             self.repump_aoms_dds = [
                 self.get_device(kk) for kk in self.REPUMP_AOM_DDS_CHANNELS
             ]
         if self.REPUMP_AOM_TTL_CHANNELS is None:
             self.repump_aoms_ttl = [self.get_device(self.devices.ttl_outs[0])]
-            self.USE_REPUMP_TTL = False
+            self.use_repump_ttl = False
         else:
             self.repump_aoms_ttl = [
                 self.get_device(kk) for kk in self.REPUMP_AOM_TTL_CHANNELS
@@ -116,33 +116,33 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         self.core.break_realtime()
 
         if differential_mode:
-            if self.USE_REPUMP_DDS:
+            if self.use_repump_dds:
                 for kk in range(len(self.repump_aoms_dds)):
                     # if the repump AOM is off, don't turn on and off the AOM.
                     # the repump AOM stays off for both differential high and low counting periods.
                     if self.repump_aom_dds_states[kk] > 0.0:
                         self.repump_aoms_dds[kk].sw.off()
-            if self.USE_REPUMP_TTL:
+            if self.use_repump_ttl:
                 for kk in range(len(self.repump_aoms_ttl)):
                     self.repump_aoms_ttl[kk].on()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
             at_mu(t_count + self.rtio_cycle_mu)
-            if self.USE_REPUMP_DDS:
+            if self.use_repump_dds:
                 for kk in range(len(self.repump_aoms_dds)):
                     if self.repump_aom_dds_states[kk] > 0.0:
                         self.repump_aoms_dds[kk].sw.on()
-            if self.USE_REPUMP_TTL:
+            if self.use_repump_ttl:
                 for kk in range(len(self.repump_aoms_ttl)):
                     self.repump_aoms_ttl[kk].off()
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
         else:
             t_count = self.pmt_counter.gate_rising_mu(interval_mu)
 
-        twenty_ms_mu = (
+        wait_time_mu = (
             20 * ms
         )  # 20 ms time slack to prevent slowing down PMT acquisition.
-        while t_count > now_mu() + twenty_ms_mu:
+        while t_count > now_mu() + wait_time_mu:
             self.update_hardware()
 
         if differential_mode:
