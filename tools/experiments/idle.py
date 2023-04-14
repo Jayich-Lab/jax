@@ -188,7 +188,7 @@ class IDLE(InfiniteLoop, SinaraEnvironment):
         for kk in dds_changes:
             index = self.devices.ad9910s.index(kk[0])
             try:
-                index_repump = self.REPUMP_AOM_CHANNELS.index(kk[0])
+                index_repump = self.REPUMP_AOM_DDS_CHANNELS.index(kk[0])
             except ValueError as e:
                 index_repump = -1
             to_kernel.append((index, index_repump, kk[1], kk[2]))
