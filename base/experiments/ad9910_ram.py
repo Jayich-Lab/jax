@@ -111,7 +111,7 @@ class RAMProfile:
     """
     RAM_SIZE = 1024
 
-    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode, dwell_end=1):
+    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode, dwell_end=True):
         # Make sure the RAM can hold the entire sequence
         if len(data) > RAMProfile.RAM_SIZE:
             raise ValueError("Data size exceeds the RAM capacity")
