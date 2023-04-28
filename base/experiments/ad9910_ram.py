@@ -60,8 +60,8 @@ class RAMProfile:
         step: int, the number of sysclk cycles per RAM step.
         ram_mode: int, the playback mode of the RAM.
         ram_type: RAMType, the type of RAM.
-        nodwell_high: No-dwell high bit (default: 0, see AD9910 documentation).
-        Ignored except for in RAM Ramp-Up Mode.
+        nodwell_high: int, the no-dwell high bit. Ignored except in RAM Ramp-Up
+            Mode. Defaults to 0 (See AD9910 documentation).
 
     Args:
         dds: AD9910, the DDS that will playback the RAM profile.
