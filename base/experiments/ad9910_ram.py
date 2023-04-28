@@ -103,8 +103,10 @@ class RAMProfile:
             - RAM Bidirectional Ramp Mode (p.38, Figure 46)
             - RAM Continuous Bidirectional Ramp Mode (p.39, Figure 47)
             - RAM Continuous Recirculate Mode (p.40, Figure 48)
-        dwell_end: negated no-dwell high bit (default: 1). Ignored except for in
-        RAM Ramp-Up Mode.
+        dwell_end: bool. If true, the RAM halts when the last data is reached.
+            Otherwise, the RAM jumps back to the first data and halts after the
+            last data is reached. Ignored except in RAM Ramp-Up Mode. Defaults
+            to True.
 
     Raises:
         ValueError: Unsupported RAM configuration found.
