@@ -60,6 +60,8 @@ class RAMProfile:
         step: int, the number of sysclk cycles per RAM step.
         ram_mode: int, the playback mode of the RAM.
         ram_type: RAMType, the type of RAM.
+        nodwell_high: int, the no-dwell high bit. Ignored except in RAM Ramp-Up
+            Mode. Defaults to 0 (See AD9910 documentation).
 
     Args:
         dds: AD9910, the DDS that will playback the RAM profile.
@@ -101,13 +103,17 @@ class RAMProfile:
             - RAM Bidirectional Ramp Mode (p.38, Figure 46)
             - RAM Continuous Bidirectional Ramp Mode (p.39, Figure 47)
             - RAM Continuous Recirculate Mode (p.40, Figure 48)
+        dwell_end: bool. If true, the RAM halts when the last data is reached.
+            Otherwise, the RAM jumps back to the first data and halts after the
+            last data is reached. Ignored except in RAM Ramp-Up Mode. Defaults
+            to True.
 
     Raises:
         ValueError: Unsupported RAM configuration found.
     """
     RAM_SIZE = 1024
 
-    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode):
+    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode, dwell_end=True):
         # Make sure the RAM can hold the entire sequence
         if len(data) > RAMProfile.RAM_SIZE:
             raise ValueError("Data size exceeds the RAM capacity")
@@ -148,6 +154,8 @@ class RAMProfile:
         self.step = int(ramp_interval * dds.sysclk / 4.0)
         self.ram_mode = ram_mode
         self.ram_type = ram_type
+
+        self.nodwell_high = int(not dwell_end)
 
 
 class RAMProfileMap:
@@ -221,6 +229,7 @@ class RAMProfileMap:
                 start=ram_profile.start_addr,
                 end=ram_profile.end_addr,
                 step=ram_profile.step,
+                nodwell_high=ram_profile.nodwell_high,
                 mode=ram_profile.ram_mode)
             dds.cpld.io_update.pulse_mu(8)
 
