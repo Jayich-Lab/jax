@@ -107,7 +107,7 @@ class RAMProfile:
     """
     RAM_SIZE = 1024
 
-    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode):
+    def __init__(self, dds, data, ramp_interval, ram_type, ram_mode, dwell_end=1):
         # Make sure the RAM can hold the entire sequence
         if len(data) > RAMProfile.RAM_SIZE:
             raise ValueError("Data size exceeds the RAM capacity")
@@ -148,6 +148,8 @@ class RAMProfile:
         self.step = int(ramp_interval * dds.sysclk / 4.0)
         self.ram_mode = ram_mode
         self.ram_type = ram_type
+
+        self.nodwell_high = int(not dwell_end)
 
 
 class RAMProfileMap:
@@ -221,6 +223,7 @@ class RAMProfileMap:
                 start=ram_profile.start_addr,
                 end=ram_profile.end_addr,
                 step=ram_profile.step,
+                nodwell_high=ram_profile.nodwell_high,
                 mode=ram_profile.ram_mode)
             dds.cpld.io_update.pulse_mu(8)
 
