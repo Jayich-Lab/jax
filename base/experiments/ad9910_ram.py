@@ -60,6 +60,7 @@ class RAMProfile:
         step: int, the number of sysclk cycles per RAM step.
         ram_mode: int, the playback mode of the RAM.
         ram_type: RAMType, the type of RAM.
+        nodwell_high: No-dwell high bit (default: 0, see AD9910 documentation)
 
     Args:
         dds: AD9910, the DDS that will playback the RAM profile.
@@ -101,6 +102,7 @@ class RAMProfile:
             - RAM Bidirectional Ramp Mode (p.38, Figure 46)
             - RAM Continuous Bidirectional Ramp Mode (p.39, Figure 47)
             - RAM Continuous Recirculate Mode (p.40, Figure 48)
+        dwell_end: negated no-dwell high bit (default: 1).
 
     Raises:
         ValueError: Unsupported RAM configuration found.
